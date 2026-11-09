@@ -1,14 +1,9 @@
-/**
- * Auth API Client
- * Manages communication with the Node.js Express backend.
- * Uses both Authorization Bearer headers and HttpOnly cookie credentials.
- */
+// Modul API autentikasi untuk komunikasi dengan backend Express
+// Mendukung pengiriman header Authorization Bearer dan cookie HttpOnly
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-/**
- * Helper to get authorization headers
- */
+// Fungsi bantuan untuk menyusun header request beserta token autentikasi
 function getHeaders(includeAuth = true) {
   const headers = {
     'Content-Type': 'application/json'
@@ -24,18 +19,16 @@ function getHeaders(includeAuth = true) {
   return headers;
 }
 
-/**
- * Register user (forced to 'staff' on backend)
- */
+// Registrasi pengguna staf baru
 export async function registerUser({ nama, email, password }) {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: getHeaders(false),
-    credentials: 'include', // Receive HttpOnly cookies if any
+    credentials: 'include', // Izinkan penerimaan cookie HttpOnly dari server
     body: JSON.stringify({
       nama,
       email,
-      pass: password // Mapped to `pass` on backend/DB
+      pass: password // Kolom password dipetakan ke field 'pass' pada database
     })
   });
 
@@ -47,14 +40,12 @@ export async function registerUser({ nama, email, password }) {
   return data;
 }
 
-/**
- * Login user
- */
+// Login pengguna ke sistem
 export async function loginUser({ email, password }) {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: getHeaders(false),
-    credentials: 'include', // Automatically stores HttpOnly cookie
+    credentials: 'include', // Menyimpan cookie HttpOnly secara otomatis pada browser
     body: JSON.stringify({
       email,
       pass: password
@@ -69,9 +60,7 @@ export async function loginUser({ email, password }) {
   return data;
 }
 
-/**
- * Fetch current user profile (Me)
- */
+// Ambil profil data pengguna yang sedang login (me)
 export async function fetchMe() {
   const response = await fetch(`${API_BASE_URL}/auth/me`, {
     method: 'GET',
@@ -87,9 +76,7 @@ export async function fetchMe() {
   return data;
 }
 
-/**
- * Logout user
- */
+// Logout dan akhiri sesi pengguna
 export async function logoutUser() {
   const response = await fetch(`${API_BASE_URL}/auth/logout`, {
     method: 'POST',
@@ -101,9 +88,7 @@ export async function logoutUser() {
   return data;
 }
 
-/**
- * Fetch dashboard shell overview stub
- */
+// Ambil data ringkasan dashboard shell
 export async function fetchDashboardStub() {
   const response = await fetch(`${API_BASE_URL}/admin/dashboard-stub`, {
     method: 'GET',
@@ -119,9 +104,7 @@ export async function fetchDashboardStub() {
   return data;
 }
 
-/**
- * Test admin-only endpoint stub
- */
+// Uji coba akses endpoint khusus administrator (RBAC)
 export async function fetchAdminUsersStub() {
   const response = await fetch(`${API_BASE_URL}/admin/manage-users-stub`, {
     method: 'GET',
@@ -136,4 +119,3 @@ export async function fetchAdminUsersStub() {
 
   return data;
 }
-

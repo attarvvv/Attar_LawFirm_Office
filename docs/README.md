@@ -469,3 +469,283 @@ if (pm.response.code === 200) {
 ```
 * **Efek Samping**: Cookie `token` dihapus dari browser klien.
 
+---
+
+### Skenario 6: Modul Konsultasi Masuk (Consultations Inbox)
+
+Modul ini menangani pengajuan permohonan konsultasi hukum online dari publik dan pengelolaan pesan masuk oleh staf/pengacara/admin kantor hukum.
+
+#### 6.1 POST /api/consultations (Formulir Pengajuan Publik - Tanpa Autentikasi)
+
+##### Kasus 6.1.1: Pengajuan Berhasil (201 Created, Default Status `unread`)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/consultations`
+* **Headers**: `Content-Type: application/json`
+* **Request Body**:
+```json
+{
+  "client_name": "Rian Pratama",
+  "client_email": "rian.pratama@startup.id",
+  "client_phone": "081234567891",
+  "service_id": 1,
+  "subject": "Pertanyaan Perizinan OSS dan Struktur Saham PT",
+  "message": "Halo tim Attar Lawfirm, kami butuh panduan mengenai klasifikasi KBLI di OSS serta pembagian hak suara saham pendiri. Mohon informasi prosedurnya."
+}
+```
+* **Expected Status**: `201 Created`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Permohonan konsultasi hukum Anda berhasil dikirim. Tim kami akan segera menindaklanjuti.",
+  "data": {
+    "id": 1,
+    "client_name": "Rian Pratama",
+    "client_email": "rian.pratama@startup.id",
+    "client_phone": "081234567891",
+    "service_id": 1,
+    "subject": "Pertanyaan Perizinan OSS dan Struktur Saham PT",
+    "message": "Halo tim Attar Lawfirm, kami butuh panduan mengenai klasifikasi KBLI di OSS serta pembagian hak suara saham pendiri. Mohon informasi prosedurnya.",
+    "status": "unread",
+    "created_at": "2026-11-09T03:00:00.000Z",
+    "service_title": "Hukum Bisnis & Korporasi"
+  }
+}
+```
+
+##### Kasus 6.1.2: Data Wajib Tidak Lengkap (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/consultations`
+* **Headers**: `Content-Type: application/json`
+* **Request Body**:
+```json
+{
+  "client_name": "Rian Pratama",
+  "client_email": "rian.pratama@startup.id"
+}
+```
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Nama lengkap, email, subjek konsultasi, dan pesan wajib diisi."
+}
+```
+
+##### Kasus 6.1.3: Format Email Tidak Valid (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/consultations`
+* **Headers**: `Content-Type: application/json`
+* **Request Body**:
+```json
+{
+  "client_name": "Rian Pratama",
+  "client_email": "bukan-alamat-email",
+  "subject": "Konsultasi Umum",
+  "message": "Pesan konsultasi hukum."
+}
+```
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Format alamat email tidak valid."
+}
+```
+
+---
+
+#### 6.2 GET /api/admin/consultations (Daftar Konsultasi Masuk - Terproteksi)
+
+##### Kasus 6.2.1: Tanpa Token Autentikasi (401 Unauthorized)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations`
+* **Expected Status**: `401 Unauthorized`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Token autentikasi tidak ditemukan."
+}
+```
+
+##### Kasus 6.2.2: Dengan Token Valid (200 OK, Mengembalikan Data & Rekap Status)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations`
+* **Headers**:
+  * `Authorization`: `Bearer {{token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Data konsultasi masuk berhasil dimuat.",
+  "stats": {
+    "total": 5,
+    "unread": 2,
+    "read": 1,
+    "replied": 1,
+    "archived": 1
+  },
+  "data": [
+    {
+      "id": 1,
+      "client_name": "Rian Pratama",
+      "client_email": "rian.pratama@startup.id",
+      "client_phone": "081234567891",
+      "service_id": 1,
+      "subject": "Pertanyaan Perizinan OSS dan Struktur Saham PT",
+      "message": "...",
+      "status": "unread",
+      "created_at": "2026-11-09T03:00:00.000Z",
+      "service_title": "Hukum Bisnis & Korporasi"
+    }
+  ]
+}
+```
+
+##### Kasus 6.2.3: Filter Status `?status=unread` (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations?status=unread`
+* **Headers**:
+  * `Authorization`: `Bearer {{token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response**: Hanya mengembalikan konsultasi yang berstatus `unread`, namun objek `stats` tetap mencakup rekap keseluruhan.
+
+##### Kasus 6.2.4: Pencarian Kata Kunci `?search=saham` (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations?search=saham`
+* **Headers**:
+  * `Authorization`: `Bearer {{token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response**: Mengembalikan konsultasi yang nama klien, email, telepon, atau subjeknya memuat kata `saham`.
+
+---
+
+#### 6.3 GET /api/admin/consultations/:id (Detail Konsultasi & Auto-Mark As Read - Terproteksi)
+
+##### Kasus 6.3.1: Ambil Detail & Verifikasi Perubahan Otomatis `unread` -> `read` (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations/1`
+* **Headers**:
+  * `Authorization`: `Bearer {{token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "client_name": "Rian Pratama",
+    "client_email": "rian.pratama@startup.id",
+    "client_phone": "081234567891",
+    "service_id": 1,
+    "subject": "Pertanyaan Perizinan OSS dan Struktur Saham PT",
+    "message": "Halo tim Attar Lawfirm, kami butuh panduan...",
+    "status": "read",
+    "created_at": "2026-11-09T03:00:00.000Z",
+    "service_title": "Hukum Bisnis & Korporasi"
+  }
+}
+```
+* **Verifikasi Khusus**: Jika konsultasi awalnya berstatus `unread`, pemanggilan endpoint ini akan otomatis memperbarui nilai kolom `status` di tabel database menjadi `read`. Pada pemanggilan kedua, status akan tetap `read`.
+
+##### Kasus 6.3.2: ID Konsultasi Tidak Ditemukan (404 Not Found)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations/999999`
+* **Headers**:
+  * `Authorization`: `Bearer {{token}}`
+* **Expected Status**: `404 Not Found`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Data konsultasi tidak ditemukan."
+}
+```
+
+##### Kasus 6.3.3: Tanpa Token Autentikasi (401 Unauthorized)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/consultations/1`
+* **Expected Status**: `401 Unauthorized`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Token autentikasi tidak ditemukan."
+}
+```
+
+---
+
+#### 6.4 PATCH /api/admin/consultations/:id/status (Ubah Status Manual - Terproteksi)
+
+##### Kasus 6.4.1: Tandai Sebagai Dibalas / Archived (200 OK)
+* **Method**: `PATCH`
+* **URL**: `{{baseUrl}}/admin/consultations/1/status`
+* **Headers**:
+  * `Content-Type`: `application/json`
+  * `Authorization`: `Bearer {{token}}`
+* **Request Body**:
+```json
+{
+  "status": "replied"
+}
+```
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Status konsultasi berhasil diubah menjadi 'replied'.",
+  "data": {
+    "id": 1,
+    "client_name": "Rian Pratama",
+    "status": "replied"
+  }
+}
+```
+
+##### Kasus 6.4.2: Nilai Enum Status Tidak Valid (400 Bad Request)
+* **Method**: `PATCH`
+* **URL**: `{{baseUrl}}/admin/consultations/1/status`
+* **Headers**:
+  * `Content-Type`: `application/json`
+  * `Authorization`: `Bearer {{token}}`
+* **Request Body**:
+```json
+{
+  "status": "status_ngawur"
+}
+```
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Status tidak valid. Pilihan: unread, read, replied, archived."
+}
+```
+
+##### Kasus 6.4.3: Tanpa Token Autentikasi (401 Unauthorized)
+* **Method**: `PATCH`
+* **URL**: `{{baseUrl}}/admin/consultations/1/status`
+* **Headers**: `Content-Type: application/json`
+* **Request Body**:
+```json
+{
+  "status": "archived"
+}
+```
+* **Expected Status**: `401 Unauthorized`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Token autentikasi tidak ditemukan."
+}
+```
+
+

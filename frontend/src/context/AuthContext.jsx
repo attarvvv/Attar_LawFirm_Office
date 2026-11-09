@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { loginUser, registerUser, fetchMe, logoutUser } from '../api/auth';
 
+// Context autentikasi untuk mengelola state login di seluruh aplikasi
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -9,9 +10,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /**
-   * Verify session on app load
-   */
+  // Verifikasi sesi pengguna saat aplikasi pertama kali dimuat
   useEffect(() => {
     async function initAuth() {
       const storedToken = localStorage.getItem('token');
@@ -22,7 +21,7 @@ export function AuthProvider({ children }) {
             setUser(res.user);
           }
         } catch (err) {
-          console.warn('[AuthContext] Session expired or invalid, resetting token.');
+          // Reset token jika sesi telah kedaluwarsa atau tidak valid
           localStorage.removeItem('token');
           setToken(null);
           setUser(null);
@@ -34,9 +33,7 @@ export function AuthProvider({ children }) {
     initAuth();
   }, []);
 
-  /**
-   * Login handler
-   */
+  // Fungsi proses login pengguna
   const login = async (email, password) => {
     setError(null);
     try {
@@ -55,9 +52,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  /**
-   * Register handler
-   */
+  // Fungsi proses registrasi staf baru
   const register = async (nama, email, password) => {
     setError(null);
     try {
@@ -69,14 +64,12 @@ export function AuthProvider({ children }) {
     }
   };
 
-  /**
-   * Logout handler
-   */
+  // Fungsi proses logout dan pembersihan sesi lokal
   const logout = async () => {
     try {
       await logoutUser();
     } catch (err) {
-      console.error('[AuthContext] Error during logout API call:', err);
+      console.error('Terjadi kesalahan saat memanggil API logout:', err);
     } finally {
       localStorage.removeItem('token');
       setToken(null);
@@ -101,11 +94,11 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Hook kustom untuk mengakses context autentikasi
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth harus digunakan di dalam AuthProvider');
   }
   return context;
 }
-

@@ -1,3 +1,5 @@
+// Komponen sidebar navigasi utama internal portal
+// Mendukung mode penuh dan rel ikon (collapsed) di desktop serta laci di mobile
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -6,25 +8,27 @@ import { t } from '../i18n';
 import {
   FaTachometerAlt,
   FaCalendarAlt,
+  FaInbox,
   FaNewspaper,
   FaBalanceScale,
-  FaComments,
   FaUsersCog,
   FaTimes,
   FaShieldAlt,
-  FaSignOutAlt
+  FaSignOutAlt,
+  FaChevronLeft,
+  FaChevronRight
 } from 'react-icons/fa';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
 
-  // Daftar navigasi: Hanya Dashboard dan Janji Temu yang memiliki rute aktif saat ini
+  // Daftar navigasi: Dashboard, Janji Temu, dan Konsultasi Masuk adalah rute aktif
   const navItems = [
     { name: t('navDashboard'), path: '/admin/dashboard', icon: FaTachometerAlt },
     { name: t('navAppointments'), path: '/admin/appointments', icon: FaCalendarAlt },
-    { name: t('navConsultations'), path: '#', icon: FaComments, isPlaceholder: true },
+    { name: t('navConsultations'), path: '/admin/consultations', icon: FaInbox },
     { name: t('navArticles'), path: '#', icon: FaNewspaper, isPlaceholder: true },
     { name: t('navLawyers'), path: '#', icon: FaBalanceScale, isPlaceholder: true },
   ];
@@ -42,13 +46,39 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Kontainer Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-primary text-white flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 bg-primary text-white flex flex-col transition-all duration-300 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${
+          isCollapsed ? 'w-72 lg:w-20' : 'w-72 lg:w-72'
         } shadow-xl border-r border-accent/20`}
       >
-        {/* Header Wordmark */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-primary-light">
-          <BrandLogo size="normal" inverted={true} />
+        {/* Header Wordmark & Tombol Ciutkan / Tutup */}
+        <div
+          className={`h-20 flex items-center border-b border-primary-light transition-all ${
+            isCollapsed
+              ? 'justify-center flex-col p-2'
+              : 'justify-between px-6'
+          }`}
+        >
+          <BrandLogo size="normal" inverted={true} iconOnly={isCollapsed} />
+
+          {/* Tombol ciutkan/lebarkan sidebar khusus desktop */}
+          <button
+            onClick={onToggleCollapse}
+            className={`hidden lg:flex p-1.5 text-gray-300 hover:text-accent hover:bg-primary-light rounded-lg transition-colors focus:outline-none ${
+              isCollapsed ? 'mt-1' : ''
+            }`}
+            title={isCollapsed ? 'Perluas Menu Sidebar' : 'Ciutkan Menu Sidebar'}
+            aria-label={isCollapsed ? 'Perluas Menu Sidebar' : 'Ciutkan Menu Sidebar'}
+          >
+            {isCollapsed ? (
+              <FaChevronRight className="w-3.5 h-3.5" />
+            ) : (
+              <FaChevronLeft className="w-4 h-4" />
+            )}
+          </button>
+
+          {/* Tombol tutup drawer mobile */}
           <button
             onClick={onClose}
             className="lg:hidden p-2 text-gray-300 hover:text-accent rounded-lg focus:outline-none"
@@ -59,12 +89,14 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* Bagian Navigasi */}
-        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+        <div className={`flex-1 overflow-y-auto py-6 space-y-6 ${isCollapsed ? 'px-2' : 'px-4'}`}>
           {/* Menu Utama */}
           <div>
-            <div className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-accent/80">
-              Menu Utama
-            </div>
+            {!isCollapsed && (
+              <div className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-accent/80">
+                Menu Utama
+              </div>
+            )}
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -75,34 +107,43 @@ export default function Sidebar({ isOpen, onClose }) {
                   return (
                     <div
                       key={item.name}
-                      className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-primary-light/50 hover:text-gray-200 transition-colors cursor-default select-none"
-                      title="Modul ini belum tersedia"
+                      className={`flex items-center rounded-lg text-sm font-medium text-gray-400 hover:bg-primary-light/50 hover:text-gray-200 transition-colors cursor-default select-none ${
+                        isCollapsed
+                          ? 'justify-center p-3'
+                          : 'justify-between px-3.5 py-2.5'
+                      }`}
+                      title={item.name + ' (Segera Hadir)'}
                     >
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-accent/60" />
-                        <span>{item.name}</span>
+                      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                        <Icon className="w-4 h-4 text-accent/60 flex-shrink-0" />
+                        {!isCollapsed && <span>{item.name}</span>}
                       </div>
                     </div>
                   );
                 }
 
-                // Menu yang sudah aktif (Dashboard & Janji Temu)
+                // Menu yang sudah aktif (Dashboard, Janji Temu, dan Konsultasi Masuk)
                 return (
                   <NavLink
                     key={item.name}
                     to={item.path}
+                    title={item.name}
                     onClick={() => {
                       if (window.innerWidth < 1024) onClose();
                     }}
-                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center rounded-lg text-sm font-medium transition-colors ${
+                      isCollapsed
+                        ? 'justify-center p-3'
+                        : 'justify-between px-3.5 py-2.5'
+                    } ${
                       isActive
-                        ? 'bg-accent text-primary font-semibold shadow-sm'
+                        ? 'bg-accent text-primary font-semibold shadow-xs'
                         : 'text-gray-200 hover:bg-primary-light hover:text-white'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-accent'}`} />
-                      <span>{item.name}</span>
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary' : 'text-accent'}`} />
+                      {!isCollapsed && <span>{item.name}</span>}
                     </div>
                   </NavLink>
                 );
@@ -113,43 +154,71 @@ export default function Sidebar({ isOpen, onClose }) {
           {/* Bagian Khusus Administrator (Hanya tampil jika user adalah admin) */}
           {isAdmin && (
             <div>
-              <div className="px-3 mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-accent/80">
-                <span>{t('adminOnlySection')}</span>
-                <FaShieldAlt className="text-accent/60 w-3 h-3" />
-              </div>
-
-              <div className="space-y-1">
-                <a
-                  href="#manage-users"
-                  className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-primary-light hover:text-white transition-colors border border-accent/30 bg-primary-light/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <FaUsersCog className="w-4 h-4 text-accent" />
-                    <span>{t('navManageUsers')}</span>
+              {!isCollapsed ? (
+                <>
+                  <div className="px-3 mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-accent/80">
+                    <span>{t('adminOnlySection')}</span>
+                    <FaShieldAlt className="text-accent/60 w-3 h-3" />
                   </div>
-                  <span className="text-[10px] font-bold bg-accent text-primary px-2 py-0.5 rounded-full">
-                    Admin
-                  </span>
-                </a>
-              </div>
+
+                  <div className="space-y-1">
+                    <a
+                      href="#manage-users"
+                      className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-primary-light hover:text-white transition-colors border border-accent/30 bg-primary-light/50"
+                      title={t('navManageUsers')}
+                    >
+                      <div className="flex items-center gap-3">
+                        <FaUsersCog className="w-4 h-4 text-accent flex-shrink-0" />
+                        <span>{t('navManageUsers')}</span>
+                      </div>
+                      <span className="text-[10px] font-bold bg-accent text-primary px-2 py-0.5 rounded-full">
+                        Admin
+                      </span>
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-center py-2 border-t border-primary-light/60">
+                  <a
+                    href="#manage-users"
+                    className="p-3 rounded-lg text-accent hover:bg-primary-light hover:text-white transition-colors border border-accent/30 bg-primary-light/50 flex items-center justify-center"
+                    title={`${t('navManageUsers')} (Khusus Administrator)`}
+                  >
+                    <FaUsersCog className="w-4 h-4" />
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Bar Sesi Pengguna & Tombol Logout */}
-        <div className="p-4 border-t border-primary-light bg-primary-dark/70 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-accent text-primary font-bold flex items-center justify-center text-sm shadow-inner flex-shrink-0">
+        <div
+          className={`border-t border-primary-light bg-primary-dark/70 transition-all ${
+            isCollapsed
+              ? 'p-3 flex flex-col items-center gap-3'
+              : 'p-4 flex items-center justify-between gap-3'
+          }`}
+        >
+          <div className={`flex items-center min-w-0 ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+            <div
+              className="w-9 h-9 rounded-full bg-accent text-primary font-bold flex items-center justify-center text-sm shadow-inner flex-shrink-0 cursor-default"
+              title={`${user?.nama || 'Pengguna'} (${user?.role || 'Staff'})`}
+            >
               {user?.nama ? user.nama.charAt(0).toUpperCase() : 'U'}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-white truncate">{user?.nama}</p>
-              <div className="mt-0.5">
-                <span className="text-[10px] uppercase font-medium text-accent tracking-wider">
-                  {user?.role}
-                </span>
+            {!isCollapsed && (
+              <div className="min-w-0 flex flex-col justify-center">
+                <p className="text-xs font-semibold text-white truncate leading-tight" title={user?.nama}>
+                  {user?.nama}
+                </p>
+                <div className="mt-1.5">
+                  <span className="inline-block text-[10px] uppercase font-bold text-accent tracking-wider bg-accent/15 px-2 py-0.5 rounded">
+                    {user?.role}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <button

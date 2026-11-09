@@ -1,10 +1,8 @@
-/**
- * Appointments API Client
- * Mengelola komunikasi data janji temu dengan backend Express.
- */
+// Modul API janji temu untuk komunikasi dengan endpoint janji temu di backend
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+// Fungsi bantuan untuk menyusun header request dan token autentikasi
 function getHeaders() {
   const headers = {
     'Content-Type': 'application/json'
@@ -16,7 +14,7 @@ function getHeaders() {
   return headers;
 }
 
-// Ambil daftar janji temu dengan parameter status & pencarian
+// Ambil daftar janji temu dengan filter status dan kata kunci pencarian
 export async function fetchAppointments({ status = 'all', search = '' } = {}) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.append('status', status);
@@ -36,7 +34,7 @@ export async function fetchAppointments({ status = 'all', search = '' } = {}) {
   return data;
 }
 
-// Perbarui status janji temu (pending, confirmed, completed, cancelled) & catatan admin
+// Perbarui status janji temu dan catatan internal admin
 export async function updateAppointmentStatus(id, { status, admin_notes }) {
   const response = await fetch(`${API_BASE_URL}/appointments/${id}/status`, {
     method: 'PATCH',
@@ -53,7 +51,7 @@ export async function updateAppointmentStatus(id, { status, admin_notes }) {
   return data;
 }
 
-// Ambil ringkasan statistik janji temu
+// Ambil ringkasan statistik total janji temu berdasarkan status
 export async function fetchAppointmentStats() {
   const response = await fetch(`${API_BASE_URL}/appointments/stats`, {
     method: 'GET',
@@ -69,7 +67,7 @@ export async function fetchAppointmentStats() {
   return data;
 }
 
-// Muat data sampel jika tabel masih kosong
+// Muat data contoh janji temu jika tabel di database masih kosong
 export async function seedSampleAppointments() {
   const response = await fetch(`${API_BASE_URL}/appointments/seed`, {
     method: 'POST',
@@ -84,4 +82,3 @@ export async function seedSampleAppointments() {
 
   return data;
 }
-

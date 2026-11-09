@@ -1,11 +1,4 @@
-/**
- * i18n Translation Dictionary
- * Default language: Indonesian (id)
- * Secondary language ready: English (en)
- * 
- * Structured to ensure zero hardcoded blocking for future multi-language rollouts.
- */
-
+// Kamus terjemahan antarmuka (default: Bahasa Indonesia, siap untuk Bahasa Inggris)
 const translations = {
   id: {
     // App Brand
@@ -141,33 +134,20 @@ const translations = {
 
 let currentLang = 'id';
 
-/**
- * Translation helper function
- * 
- * @param {string} key - Dictionary key
- * @returns {string} Translated string
- */
+// Helper fungsi untuk mengambil terjemahan berdasarkan kunci
 export function t(key) {
   const dict = translations[currentLang] || translations.id;
   return dict[key] || translations.id[key] || key;
 }
 
-/**
- * Set active language
- * 
- * @param {'id' | 'en'} lang 
- */
+// Ubah bahasa aktif aplikasi
 export function setLanguage(lang) {
   if (translations[lang]) {
     currentLang = lang;
   }
 }
 
-/**
- * Get active language
- * 
- * @returns {string}
- */
+// Ambil kode bahasa yang sedang aktif
 export function getLanguage() {
   return currentLang;
 }

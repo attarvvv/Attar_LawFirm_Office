@@ -1,16 +1,7 @@
 const { pool } = require('../src/config/db');
 
-/**
- * Model Pengguna (User Model)
- * Mengelola query ke tabel `users` pada basis data `lawfirm_db`.
- *
- * Pemetaan Kolom:
- * - id: INT AUTO_INCREMENT (Primary Key)
- * - nama: VARCHAR(100) -> Nama lengkap pengguna
- * - email: VARCHAR(100) -> Alamat email (unik)
- * - pass: VARCHAR(255) -> Hash kata sandi bcrypt
- * - role: ENUM('admin', 'lawyer', 'staff') -> Peran internal
- */
+// Model Pengguna (User Model)
+// Mengelola query ke tabel users pada basis data lawfirm_db
 class UserModel {
   // Cari pengguna berdasarkan email (termasuk kolom 'pass' untuk verifikasi login)
   static async findByEmail(email) {

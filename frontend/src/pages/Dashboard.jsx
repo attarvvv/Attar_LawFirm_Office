@@ -1,12 +1,14 @@
+// Halaman utama dashboard internal portal kantor hukum
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchAdminUsersStub } from '../api/auth';
 import { fetchAppointmentStats } from '../api/appointments';
+import { fetchConsultations } from '../api/consultations';
 import { t } from '../i18n';
 import {
   FaCalendarCheck,
-  FaComments,
+  FaInbox,
   FaFileAlt,
   FaUserTie,
   FaShieldAlt,
@@ -20,19 +22,30 @@ export default function Dashboard() {
   const [adminTestResult, setAdminTestResult] = useState(null);
   const [testingAdminApi, setTestingAdminApi] = useState(false);
   const [appointmentCount, setAppointmentCount] = useState(0);
+  const [consultationCount, setConsultationCount] = useState(0);
 
-  // Ambil data jumlah janji temu aktif
+  // Ambil data jumlah janji temu dan konsultasi aktif
   useEffect(() => {
     async function loadStats() {
       try {
-        const res = await fetchAppointmentStats();
-        if (res.success && res.data) {
+        const appRes = await fetchAppointmentStats();
+        if (appRes.success && appRes.data) {
           // Jumlah janji temu aktif (pending + confirmed)
-          const active = (res.data.pending || 0) + (res.data.confirmed || 0);
+          const active = (appRes.data.pending || 0) + (appRes.data.confirmed || 0);
           setAppointmentCount(active);
         }
       } catch (err) {
         console.warn('Gagal memuat stats janji temu di dashboard:', err.message);
+      }
+
+      try {
+        const consultRes = await fetchConsultations();
+        if (consultRes.success && consultRes.stats) {
+          // Jumlah pesan konsultasi belum dibaca (unread) atau total aktif
+          setConsultationCount(consultRes.stats.unread || 0);
+        }
+      } catch (err) {
+        console.warn('Gagal memuat stats konsultasi di dashboard:', err.message);
       }
     }
     loadStats();
@@ -74,11 +87,11 @@ export default function Dashboard() {
     },
     {
       title: t('incomingConsultations'),
-      count: '0',
-      icon: FaComments,
+      count: String(consultationCount),
+      icon: FaInbox,
       color: 'text-amber-700 bg-amber-50 border-amber-200',
-      note: 'Pesan konsultasi publik',
-      link: null
+      note: 'Pesan baru belum dibaca',
+      link: '/admin/consultations'
     },
     {
       title: t('publishedArticles'),
@@ -182,8 +195,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full border bg-emerald-50/40 text-emerald-900 border-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span>Terbuka (Admin)</span>
             </span>
           </div>

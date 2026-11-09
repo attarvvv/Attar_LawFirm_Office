@@ -1,13 +1,9 @@
 const { pool } = require('../src/config/db');
 
-/**
- * Model Janji Temu (Appointment Model)
- * Mengelola query ke tabel `appointments` dengan relasi ke `lawyers` dan `services`.
- */
+// Model Janji Temu (Appointment Model)
+// Mengelola query ke tabel appointments dengan relasi ke lawyers dan services
 class AppointmentModel {
-  /**
-   * Ambil daftar janji temu dengan filter status dan pencarian kata kunci.
-   */
+  // Ambil daftar janji temu dengan filter status dan pencarian kata kunci
   static async findAll({ status, search } = {}) {
     let query = `
       SELECT 
@@ -55,9 +51,7 @@ class AppointmentModel {
     return rows;
   }
 
-  /**
-   * Ambil detail satu janji temu berdasarkan ID
-   */
+  // Ambil detail satu janji temu berdasarkan ID
   static async findById(id) {
     const query = `
       SELECT 
@@ -89,9 +83,7 @@ class AppointmentModel {
     return rows.length > 0 ? rows[0] : null;
   }
 
-  /**
-   * Perbarui status dan catatan admin untuk janji temu
-   */
+  // Perbarui status dan catatan admin untuk janji temu
   static async updateStatus(id, { status, admin_notes }) {
     let query = `UPDATE appointments SET status = ?`;
     const params = [status];
@@ -108,9 +100,7 @@ class AppointmentModel {
     return result.affectedRows > 0;
   }
 
-  /**
-   * Hitung ringkasan jumlah janji temu berdasarkan status
-   */
+  // Hitung ringkasan jumlah janji temu berdasarkan status
   static async getStats() {
     const query = `
       SELECT 

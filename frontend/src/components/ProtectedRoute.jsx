@@ -2,19 +2,13 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-/**
- * ProtectedRoute Component
- * Guards routes against unauthenticated requests.
- * Supports optional Role-Based Access Control (RBAC) via `allowedRoles`.
- *
- * @param {Object} props
- * @param {React.ReactNode} props.children
- * @param {Array<string>} [props.allowedRoles] - e.g. ['admin'], ['admin', 'lawyer']
- */
+// Komponen pelindung rute untuk membatasi akses pengguna yang belum terautentikasi
+// Mendukung pembatasan hak akses berbasis peran (RBAC) melalui properti allowedRoles
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user, loading } = useAuth();
   const location = useLocation();
 
+  // Tampilkan indikator memuat jika status autentikasi masih diverifikasi
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-cream text-primary">
@@ -26,12 +20,12 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     );
   }
 
-  // Not authenticated -> redirect to login preserving attempted path
+  // Jika belum login, alihkan ke halaman login dan simpan rute asal
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Role validation if specified
+  // Validasi peran pengguna jika batasan peran ditentukan
   if (allowedRoles && (!user || !allowedRoles.includes(user.role))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream p-4">
@@ -56,4 +50,3 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   return children;
 }
-

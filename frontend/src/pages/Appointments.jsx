@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import StatusBadge from '../components/StatusBadge';
 import {
   fetchAppointments,
   updateAppointmentStatus,
@@ -150,42 +151,6 @@ export default function Appointments() {
   const formatTime = (timeStr) => {
     if (!timeStr) return '';
     return timeStr.slice(0, 5) + ' WIB';
-  };
-
-  // Status Styling Helper (Disimpan untuk referensi / jika ingin diaktifkan kembali)
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'pending':
-        return {
-          label: 'Menunggu Konfirmasi',
-          badgeClass: 'bg-amber-50/40 text-amber-900 border-amber-400',
-          dotClass: 'bg-amber-500'
-        };
-      case 'confirmed':
-        return {
-          label: 'Dikonfirmasi',
-          badgeClass: 'bg-blue-50/40 text-blue-900 border-blue-400',
-          dotClass: 'bg-blue-500'
-        };
-      case 'completed':
-        return {
-          label: 'Selesai',
-          badgeClass: 'bg-emerald-50/40 text-emerald-900 border-emerald-400',
-          dotClass: 'bg-emerald-500'
-        };
-      case 'cancelled':
-        return {
-          label: 'Dibatalkan',
-          badgeClass: 'bg-rose-50/40 text-rose-900 border-rose-400',
-          dotClass: 'bg-rose-500'
-        };
-      default:
-        return {
-          label: status,
-          badgeClass: 'bg-gray-50 text-gray-800 border-gray-300',
-          dotClass: 'bg-gray-400'
-        };
-    }
   };
 
   // Tab Status Filter List
@@ -364,13 +329,12 @@ export default function Appointments() {
                 key={item.id}
                 className="bg-white rounded-2xl border border-gray-200/90 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between overflow-hidden"
               >
-                {/* 1. Card Header: Kode Booking (Status badge dinonaktifkan) */}
+                {/* 1. Card Header: Kode Booking + Status Badge */}
                 <div className="px-5 py-3.5 bg-cream/50 border-b border-gray-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-primary tracking-wider">
-                      #{item.booking_code}
-                    </span>
-                  </div>
+                  <span className="font-mono text-xs font-bold text-primary tracking-wider">
+                    #{item.booking_code}
+                  </span>
+                  <StatusBadge status={item.status} />
                 </div>
 
                 {/* 2. Card Body: Data Klien, Jadwal, Pengacara, Catatan */}

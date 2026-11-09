@@ -14,6 +14,7 @@ import {
   FaCheckCircle
 } from 'react-icons/fa';
 
+// Halaman registrasi akun staf internal kantor hukum
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -32,7 +33,7 @@ export default function Register() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle Form Change
+  // Tangani perubahan nilai input form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -43,7 +44,7 @@ export default function Register() {
     if (serverError) setServerError('');
   };
 
-  // Client-side Validation
+  // Validasi form registrasi di sisi klien
   const validateForm = () => {
     const newErrors = {};
 
@@ -76,7 +77,7 @@ export default function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle Form Submit
+  // Kirim data registrasi ke server backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -106,6 +107,7 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-cream flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        {/* Logo brand kantor hukum */}
         <div className="flex justify-center mb-6">
           <BrandLogo size="large" />
         </div>
@@ -119,7 +121,7 @@ export default function Register() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 sm:px-10 shadow-lg rounded-2xl border border-gray-200/80">
-          {/* Security Notice: Role default is Staff */}
+          {/* Pemberitahuan kebijakan pembatasan peran pendaftaran publik */}
           <div className="mb-6 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
             <FaInfoCircle className="w-5 h-5 text-amber-700 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-amber-900 leading-relaxed">
@@ -127,7 +129,7 @@ export default function Register() {
             </p>
           </div>
 
-          {/* Success Banner */}
+          {/* Banner notifikasi sukses */}
           {successMessage && (
             <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
               <FaCheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
@@ -137,7 +139,7 @@ export default function Register() {
             </div>
           )}
 
-          {/* Server Error Alert Banner */}
+          {/* Banner notifikasi error */}
           {serverError && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
               <FaExclamationCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -148,7 +150,7 @@ export default function Register() {
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-            {/* Full Name */}
+            {/* Input nama lengkap */}
             <div>
               <label htmlFor="nama" className="block text-sm font-semibold text-primary mb-1">
                 {t('fullName')}
@@ -176,7 +178,7 @@ export default function Register() {
               )}
             </div>
 
-            {/* Email Address */}
+            {/* Input alamat email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-primary mb-1">
                 {t('email')}
@@ -205,7 +207,7 @@ export default function Register() {
               )}
             </div>
 
-            {/* Password */}
+            {/* Input kata sandi */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-primary mb-1">
                 {t('password')}
@@ -241,7 +243,7 @@ export default function Register() {
               )}
             </div>
 
-            {/* Confirm Password */}
+            {/* Input konfirmasi kata sandi */}
             <div>
               <label
                 htmlFor="confirmPassword"
@@ -286,7 +288,7 @@ export default function Register() {
               )}
             </div>
 
-            {/* Submit Button */}
+            {/* Tombol aksi registrasi */}
             <div className="pt-3">
               <button
                 type="submit"
@@ -305,7 +307,7 @@ export default function Register() {
             </div>
           </form>
 
-          {/* Switch to Login */}
+          {/* Tautan kembali ke halaman login */}
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-dark-muted">
               {t('haveAccount')}{' '}
@@ -322,4 +324,3 @@ export default function Register() {
     </div>
   );
 }
-

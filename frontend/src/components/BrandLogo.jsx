@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
 
-/**
- * Komponen Logo Brand Attar Lawfirm
- * Mendukung logo gambar dari folder public:
- * - Letakkan file logo di: `frontend/public/logo.png` (atau .svg / .jpg)
- * - Jika file gambar logo belum ada, otomatis menggunakan icon cadangan secara aman.
- */
-export default function BrandLogo({ size = 'normal', inverted = false }) {
+// Komponen logo brand kantor hukum (mendukung file gambar /logo.png dari folder public dan mode iconOnly)
+export default function BrandLogo({ size = 'normal', inverted = false, iconOnly = false }) {
   const isLarge = size === 'large';
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="flex items-center gap-3 select-none">
-      {/* 1. Tampilkan Gambar Logo (jika file /logo.png ada di folder public) */}
+    <div className={`flex items-center ${iconOnly ? 'justify-center' : 'gap-3'} select-none`}>
+      {/* Tampilkan gambar logo jika tersedia di folder public */}
       {!imageError ? (
         <img
           src="/logo.png"
@@ -23,7 +18,7 @@ export default function BrandLogo({ size = 'normal', inverted = false }) {
           } object-contain transition-all`}
         />
       ) : (
-        /* Fallback: Icon timbangan jika gambar logo belum ditaruh di folder */
+        // Ikon cadangan timbangan keadilan jika file gambar belum dimasukkan
         <div
           className={`flex items-center justify-center rounded-lg border ${
             inverted
@@ -36,23 +31,25 @@ export default function BrandLogo({ size = 'normal', inverted = false }) {
         </div>
       )}
 
-      {/* 2. Teks Nama Kantor Hukum */}
-      <div className="flex flex-col">
-        <span
-          className={`font-semibold tracking-tight leading-none ${
-            isLarge ? 'text-xl' : 'text-base'
-          } ${inverted ? 'text-white' : 'text-primary'}`}
-        >
-          Attar <span className="text-accent font-bold">Lawfirm</span>
-        </span>
-        <span
-          className={`text-[10px] tracking-widest uppercase font-medium mt-0.5 ${
-            inverted ? 'text-gray-300' : 'text-dark-muted'
-          }`}
-        >
-          Office
-        </span>
-      </div>
+      {/* Teks identitas kantor hukum (disembunyikan saat mode iconOnly) */}
+      {!iconOnly && (
+        <div className="flex flex-col">
+          <span
+            className={`font-semibold tracking-tight leading-none ${
+              isLarge ? 'text-xl' : 'text-base'
+            } ${inverted ? 'text-white' : 'text-primary'}`}
+          >
+            Attar <span className="text-accent font-bold">Lawfirm</span>
+          </span>
+          <span
+            className={`text-[10px] tracking-widest uppercase font-medium mt-0.5 ${
+              inverted ? 'text-gray-300' : 'text-dark-muted'
+            }`}
+          >
+            Office
+          </span>
+        </div>
+      )}
     </div>
   );
 }

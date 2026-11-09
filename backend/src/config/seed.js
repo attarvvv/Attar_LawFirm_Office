@@ -1,12 +1,10 @@
 const { pool } = require('./db');
 
-/**
- * Seeder data awal untuk pengujian modul Janji Temu (Appointments)
- * Memastikan tabel `services`, `lawyers`, dan `appointments` memiliki data contoh yang rapi.
- */
+// Seeder data awal untuk pengujian modul sistem internal portal
+// Memastikan tabel services, lawyers, appointments, dan consultations memiliki data contoh yang rapi
 async function seedAppointmentsData() {
   try {
-    // 1. Cek & Isi Layanan Hukum (services)
+    // 1. Cek dan isi layanan hukum jika masih kosong
     const [services] = await pool.query('SELECT count(*) as count FROM services');
     if (services[0].count === 0) {
       await pool.query(`
@@ -19,7 +17,7 @@ async function seedAppointmentsData() {
       console.log('[Seeder] Data layanan hukum berhasil ditambahkan.');
     }
 
-    // 2. Cek & Isi Daftar Pengacara (lawyers)
+    // 2. Cek dan isi daftar pengacara jika masih kosong
     const [lawyers] = await pool.query('SELECT count(*) as count FROM lawyers');
     if (lawyers[0].count === 0) {
       await pool.query(`
@@ -31,7 +29,7 @@ async function seedAppointmentsData() {
       console.log('[Seeder] Data pengacara berhasil ditambahkan.');
     }
 
-    // 3. Cek & Isi Janji Temu (appointments)
+    // 3. Cek dan isi janji temu jika masih kosong
     const [apps] = await pool.query('SELECT count(*) as count FROM appointments');
     if (apps[0].count === 0) {
       const [lawyerRows] = await pool.query('SELECT id FROM lawyers ORDER BY id ASC LIMIT 3');
@@ -63,9 +61,39 @@ async function seedAppointmentsData() {
   }
 }
 
+// Seeder data contoh untuk pengujian modul Konsultasi Masuk (Consultations)
+async function seedConsultationsData() {
+  try {
+    const [consultations] = await pool.query('SELECT count(*) as count FROM consultations');
+    if (consultations[0].count === 0) {
+      const [serviceRows] = await pool.query('SELECT id FROM services ORDER BY id ASC LIMIT 4');
+      const s1 = serviceRows[0]?.id || 1;
+      const s2 = serviceRows[1]?.id || 2;
+      const s3 = serviceRows[2]?.id || 3;
+      const s4 = serviceRows[3]?.id || 4;
+
+      await pool.query(`
+        INSERT INTO consultations 
+        (client_name, client_email, client_phone, service_id, subject, message, status, created_at) 
+        VALUES
+        ('Rian Pratama', 'rian.pratama@startup.id', '081234567891', ?, 'Pertanyaan Perizinan OSS dan Struktur Saham PT', 'Halo tim Attar Lawfirm, kami sedang mendirikan perseroan terbatas baru di bidang edutech dan butuh panduan mengenai klasifikasi KBLI di OSS serta pembagian hak suara saham pendiri. Mohon informasi terkait prosedur dan biayanya.', 'unread', NOW() - INTERVAL 1 HOUR),
+        ('Siti Nurhaliza', 'siti.nurhaliza@gmail.com', '081398765432', ?, 'Sengketa Batas Tanah Warisan Keluarga', 'Selamat siang, keluarga kami memiliki sertifikat tanah di Jakarta Selatan namun ada klaim dari pihak ketiga atas sebagian batas pekarangan. Kami berencana menempuh jalur mediasi terlebih dahulu sebelum ke pengadilan. Apakah bisa dijadwalkan konsultasi awal minggu ini?', 'unread', NOW() - INTERVAL 3 HOUR),
+        ('Ahmad Fauzi', 'ahmad.fauzi@logistikprima.co.id', '082112233445', ?, 'Tinjauan Draf Kontrak Kerja PKWT 2026', 'Perusahaan kami ingin memperbarui klausul kerahasiaan data (NDA) dan non-kompetisi dalam template perjanjian kerja waktu tertentu kami agar sesuai dengan regulasi ketenagakerjaan terbaru.', 'read', NOW() - INTERVAL 1 DAY),
+        ('Dian Permatasari', 'dian.permatasari@creativehub.com', '085712345678', ?, 'Pendaftaran Hak Merek Kelas 35 & 42', 'Terima kasih atas tanggapan sebelumnya. Kami sudah mengumpulkan seluruh logo brand dan formulir bukti pemakaian pertama untuk segera diajukan ke Ditjen KI.', 'replied', NOW() - INTERVAL 2 DAY),
+        ('Gunawan Wijaya', 'gunawan.w@ptsejahteramaju.com', '081823456789', NULL, 'Permintaan Penawaran Legal Retainer Bulanan', 'Kami tertarik dengan skema retainer pendampingan hukum operasional rutin untuk perusahaan logistik skala menengah. Harap kirimkan proposal penawaran jasa hukum ke email kami.', 'archived', NOW() - INTERVAL 5 DAY)
+      `, [s1, s2, s3, s4]);
+      console.log('[Seeder] Data konsultasi masuk (consultations) berhasil ditambahkan.');
+    }
+    return true;
+  } catch (err) {
+    console.error('[Seeder Error]:', err.message);
+    throw err;
+  }
+}
+
 // Jalankan langsung jika dipanggil dari CLI
 if (require.main === module) {
-  seedAppointmentsData()
+  Promise.all([seedAppointmentsData(), seedConsultationsData()])
     .then(() => {
       console.log('Seeder selesai.');
       process.exit(0);
@@ -76,5 +104,5 @@ if (require.main === module) {
     });
 }
 
-module.exports = { seedAppointmentsData };
+module.exports = { seedAppointmentsData, seedConsultationsData };
 

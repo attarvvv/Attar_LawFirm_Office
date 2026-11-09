@@ -5,6 +5,7 @@ import BrandLogo from '../components/BrandLogo';
 import { t } from '../i18n';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 
+// Halaman login staf dan administrator kantor hukum
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,21 +21,21 @@ export default function Login() {
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Path user tried to visit before being redirected to login
+  // Rute tujuan yang sebelumnya dicoba diakses sebelum diarahkan ke halaman login
   const from = location.state?.from?.pathname || '/admin/dashboard';
 
-  // Handle Input Changes
+  // Tangani perubahan nilai input form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear inline error when typing
+    // Hapus pesan error inline saat pengguna mulai mengetik ulang
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
     if (serverError) setServerError('');
   };
 
-  // Client-side Validation
+  // Validasi form di sisi klien sebelum dikirim ke server
   const validateForm = () => {
     const newErrors = {};
     if (!formData.email.trim()) {
@@ -54,7 +55,7 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle Form Submit
+  // Proses pengiriman form login ke backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -75,7 +76,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-cream flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        {/* Placeholder Brand Wordmark */}
+        {/* Logo dan identitas kantor hukum */}
         <div className="flex justify-center mb-6">
           <BrandLogo size="large" />
         </div>
@@ -89,7 +90,7 @@ export default function Login() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 sm:px-10 shadow-lg rounded-2xl border border-gray-200/80">
-          {/* Server Error Alert Banner */}
+          {/* Banner notifikasi jika login gagal */}
           {serverError && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
               <FaExclamationCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -100,7 +101,7 @@ export default function Login() {
           )}
 
           <form className="space-y-5" onSubmit={handleSubmit} noValidate>
-            {/* Email Field */}
+            {/* Input alamat email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-primary mb-1.5">
                 {t('email')}
@@ -129,7 +130,7 @@ export default function Login() {
               )}
             </div>
 
-            {/* Password Field */}
+            {/* Input kata sandi dengan tombol lihat/sembunyikan */}
             <div>
               <label
                 htmlFor="password"
@@ -169,7 +170,7 @@ export default function Login() {
               )}
             </div>
 
-            {/* Submit Button */}
+            {/* Tombol aksi login */}
             <div className="pt-2">
               <button
                 type="submit"
@@ -188,7 +189,7 @@ export default function Login() {
             </div>
           </form>
 
-          {/* Switch to Register */}
+          {/* Tautan menuju halaman pendaftaran staf */}
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-dark-muted">
               {t('noAccount')}{' '}
@@ -202,7 +203,7 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Security Note Footer */}
+        {/* Catatan kebijakan keamanan sistem */}
         <p className="mt-6 text-center text-xs text-dark-muted">
           Sistem hanya untuk personel berwenang Attar Lawfirm. Semua aktivitas dicatat secara aman.
         </p>
@@ -210,4 +211,3 @@ export default function Login() {
     </div>
   );
 }
-

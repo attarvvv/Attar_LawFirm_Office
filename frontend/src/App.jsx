@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
+import Consultations from './pages/Consultations';
 
 export default function App() {
   return (
@@ -35,8 +36,19 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      {/* Alias untuk Janji Temu */}
+      <Route
+        path="/admin/consultations"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Consultations />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Alias untuk Janji Temu dan Konsultasi */}
       <Route path="/admin/janji-temu" element={<Navigate to="/admin/appointments" replace />} />
+      <Route path="/admin/konsultasi" element={<Navigate to="/admin/consultations" replace />} />
 
       {/* Pengalihan Default */}
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

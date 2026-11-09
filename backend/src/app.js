@@ -8,6 +8,7 @@ dotenv.config();
 const authRoutes = require('../routes/authRoutes');
 const adminRoutes = require('../routes/adminRoutes');
 const appointmentRoutes = require('../routes/appointmentRoutes');
+const consultationRoutes = require('../routes/consultationRoutes');
 const { errorHandler, notFoundHandler } = require('../middleware/errorHandler');
 
 const app = express();
@@ -51,6 +52,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/consultations', consultationRoutes);
 
 // Tangani route 404 (tidak ditemukan)
 app.use(notFoundHandler);
