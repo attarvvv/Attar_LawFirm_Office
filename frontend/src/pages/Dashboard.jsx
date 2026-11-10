@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchAdminUsersStub } from '../api/auth';
 import { fetchAppointmentStats } from '../api/appointments';
 import { fetchConsultations } from '../api/consultations';
+import { fetchLawyers } from '../api/lawyers';
 import { t } from '../i18n';
 import {
   FaCalendarCheck,
@@ -23,8 +24,9 @@ export default function Dashboard() {
   const [testingAdminApi, setTestingAdminApi] = useState(false);
   const [appointmentCount, setAppointmentCount] = useState(0);
   const [consultationCount, setConsultationCount] = useState(0);
+  const [lawyerCount, setLawyerCount] = useState(0);
 
-  // Ambil data jumlah janji temu dan konsultasi aktif
+  // Ambil data jumlah janji temu, konsultasi, dan pengacara aktif
   useEffect(() => {
     async function loadStats() {
       try {
@@ -46,6 +48,15 @@ export default function Dashboard() {
         }
       } catch (err) {
         console.warn('Gagal memuat stats konsultasi di dashboard:', err.message);
+      }
+
+      try {
+        const lawyerRes = await fetchLawyers({ status: 'active' });
+        if (lawyerRes.success && lawyerRes.data) {
+          setLawyerCount(lawyerRes.data.length);
+        }
+      } catch (err) {
+        console.warn('Gagal memuat data pengacara di dashboard:', err.message);
       }
     }
     loadStats();
@@ -103,11 +114,11 @@ export default function Dashboard() {
     },
     {
       title: t('activeLawyers'),
-      count: '3',
+      count: String(lawyerCount),
       icon: FaUserTie,
       color: 'text-purple-700 bg-purple-50 border-purple-200',
       note: 'Profil & spesialisasi advokat',
-      link: null
+      link: '/admin/lawyers'
     }
   ];
 

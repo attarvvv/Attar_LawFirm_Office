@@ -46,6 +46,18 @@ const statusConfig = {
     label: 'Diarsipkan',
     textClass: 'text-gray-500',
     dotClass: 'bg-gray-400'
+  },
+
+  // Status Pengacara (Lawyers)
+  active: {
+    label: 'Aktif',
+    textClass: 'text-emerald-700',
+    dotClass: 'bg-emerald-500'
+  },
+  inactive: {
+    label: 'Nonaktif',
+    textClass: 'text-gray-500',
+    dotClass: 'bg-gray-400'
   }
 };
 

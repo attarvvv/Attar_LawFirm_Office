@@ -10,7 +10,7 @@ import {
   FaCalendarAlt,
   FaInbox,
   FaNewspaper,
-  FaBalanceScale,
+  FaUserTie,
   FaUsersCog,
   FaTimes,
   FaShieldAlt,
@@ -24,13 +24,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
 
-  // Daftar navigasi: Dashboard, Janji Temu, dan Konsultasi Masuk adalah rute aktif
+  // Daftar navigasi: Dashboard, Janji Temu, Konsultasi Masuk, dan Daftar Pengacara adalah rute aktif
   const navItems = [
     { name: t('navDashboard'), path: '/admin/dashboard', icon: FaTachometerAlt },
     { name: t('navAppointments'), path: '/admin/appointments', icon: FaCalendarAlt },
     { name: t('navConsultations'), path: '/admin/consultations', icon: FaInbox },
+    { name: t('navLawyers'), path: '/admin/lawyers', icon: FaUserTie },
     { name: t('navArticles'), path: '#', icon: FaNewspaper, isPlaceholder: true },
-    { name: t('navLawyers'), path: '#', icon: FaBalanceScale, isPlaceholder: true },
   ];
 
   return (
