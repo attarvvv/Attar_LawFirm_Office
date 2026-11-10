@@ -748,4 +748,269 @@ Modul ini menangani pengajuan permohonan konsultasi hukum online dari publik dan
 }
 ```
 
+---
+
+### Skenario 7: Modul Daftar Pengacara (Lawyers CRUD & WebP Upload)
+
+Modul ini mengelola profil advokat kantor hukum menggunakan arsitektur OOP (`LawyerModel` dan `LawyerController`), pipeline upload file foto dengan konversi otomatis ke format WebP (quality 80, resize max-width 800px via `sharp`), serta penanganan integritas relasi foreign key pada penghapusan.
+
+#### Catatan Penyimpanan Folder Uploads
+* Folder penyimpanan fisik berada di `backend/uploads/lawyers/`.
+* Disajikan sebagai file statis melalui Express pada endpoint `http://localhost:5000/uploads/...`.
+* Folder diabaikan oleh git (`.gitignore`), namun struktur direktori dipertahankan melalui file `.gitkeep`.
+* Database hanya menyimpan path relatif (misal: `/uploads/lawyers/lawyer-xxxxx.webp`), dan URL gambar penuh dibentuk oleh frontend.
+
+---
+
+#### 7.1 GET /api/lawyers (Daftar Pengacara Publik - Tanpa Autentikasi)
+
+* **Deskripsi**: Menampilkan pengacara berstatus aktif (`is_active = true`) untuk tampilan publik. Kolom sensitif seperti kontak internal (`email` dan `phone`) secara sengaja disembunyikan.
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/lawyers`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Daftar pengacara publik berhasil dimuat.",
+  "data": [
+    {
+      "id": 1,
+      "full_name": "H. Muhammad Attar, S.H., M.H.",
+      "title": "Managing Partner & Senior Advocate",
+      "photo": null,
+      "bio": null,
+      "specialization": "Hukum Bisnis, Litigasi Perdata & Arbitrase"
+    }
+  ]
+}
+```
+
+---
+
+#### 7.2 GET /api/admin/lawyers (Daftar Pengacara Internal - Terproteksi)
+
+##### Kasus 7.2.1: Tanpa Token Autentikasi (401 Unauthorized)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Expected Status**: `401 Unauthorized`
+
+##### Kasus 7.2.2: Dengan Token Valid (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Headers**: `Authorization: Bearer {{token}}`
+* **Expected Status**: `200 OK`
+* **Query Parameters Opsional**:
+  * `?status=active` (hanya advokat aktif)
+  * `?status=inactive` (hanya advokat nonaktif)
+  * `?search=litigasi` (pencarian nama, gelar, atau spesialisasi)
+
+---
+
+#### 7.3 GET /api/admin/lawyers/:id (Detail Pengacara - Terproteksi)
+
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/lawyers/1`
+* **Headers**: `Authorization: Bearer {{token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "user_id": null,
+    "full_name": "H. Muhammad Attar, S.H., M.H.",
+    "title": "Managing Partner & Senior Advocate",
+    "photo": null,
+    "bio": null,
+    "specialization": "Hukum Bisnis, Litigasi Perdata & Arbitrase",
+    "email": "attar@attarlaw.id",
+    "phone": "081234567890",
+    "is_active": 1,
+    "created_at": "2026-11-07T08:29:17.000Z",
+    "updated_at": "2026-11-07T08:29:17.000Z"
+  }
+}
+```
+
+---
+
+#### 7.4 POST /api/admin/lawyers (Tambah Pengacara Baru - Khusus Admin)
+
+##### Kasus 7.4.1: Berhasil dengan Upload Foto (201 Created)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Headers**:
+  * `Authorization`: `Bearer {{admin_token}}`
+* **Body Type**: `form-data`
+* **Form-data Fields**:
+  * `full_name` (Text): `Dewi Sartika, S.H., M.H.`
+  * `title` (Text): `Senior Associate - Litigasi Bisnis`
+  * `specialization` (Text): `Hukum Perdata dan Arbitrase`
+  * `email` (Text): `dewi.sartika@attarlaw.id`
+  * `phone` (Text): `081299887766`
+  * `is_active` (Text): `1`
+  * `photo` (File): *Pilih file gambar .jpg, .png, atau .webp*
+* **Expected Status**: `201 Created`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Data pengacara baru berhasil ditambahkan.",
+  "data": {
+    "id": 4,
+    "full_name": "Dewi Sartika, S.H., M.H.",
+    "title": "Senior Associate - Litigasi Bisnis",
+    "photo": "/uploads/lawyers/lawyer-1794315780089-972784711.webp",
+    "specialization": "Hukum Perdata dan Arbitrase",
+    "email": "dewi.sartika@attarlaw.id",
+    "phone": "081299887766",
+    "is_active": 1
+  }
+}
+```
+
+##### Kasus 7.4.2: Akses Ditolak untuk Peran Staf / Non-Admin (403 Forbidden)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Expected Status**: `403 Forbidden`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses terlarang. Peran 'staff' tidak memiliki izin untuk tindakan ini."
+}
+```
+
+##### Kasus 7.4.3: Field Wajib Kosong (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Headers**: `Authorization: Bearer {{admin_token}}`, `Content-Type: application/json`
+* **Request Body**:
+```json
+{
+  "full_name": "Advokat Tanpa Gelar"
+}
+```
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Nama lengkap dan gelar/jabatan advokat wajib diisi."
+}
+```
+
+##### Kasus 7.4.4: File Non-Gambar / PDF (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body Type**: `form-data` dengan field `photo` berisi file berkas `.pdf`
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Format file tidak didukung. Harap unggah foto berformat JPG, PNG, atau WEBP."
+}
+```
+
+##### Kasus 7.4.5: Ukuran File Melebihi 2MB (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/lawyers`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body Type**: `form-data` dengan field `photo` berukuran > 2MB
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Ukuran file foto melebihi batas maksimal 2MB."
+}
+```
+
+---
+
+#### 7.5 PUT /api/admin/lawyers/:id (Perbarui Pengacara - Khusus Admin)
+
+* **Method**: `PUT`
+* **URL**: `{{baseUrl}}/admin/lawyers/4`
+* **Headers**:
+  * `Authorization`: `Bearer {{admin_token}}`
+  * `Content-Type`: `application/json` *(atau form-data jika mengganti foto)*
+* **Request Body**:
+```json
+{
+  "full_name": "Dewi Sartika, S.H., M.H.",
+  "title": "Partner - Litigasi Bisnis & Korporasi",
+  "specialization": "Hukum Perdata, Arbitrase & Sengketa Komersial"
+}
+```
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Data pengacara berhasil diperbarui.",
+  "data": {
+    "id": 4,
+    "title": "Partner - Litigasi Bisnis & Korporasi"
+  }
+}
+```
+
+---
+
+#### 7.6 PATCH /api/admin/lawyers/:id/toggle-active (Ubah Status Aktif/Nonaktif - Khusus Admin)
+
+* **Method**: `PATCH`
+* **URL**: `{{baseUrl}}/admin/lawyers/4/toggle-active`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Status pengacara Dewi Sartika, S.H., M.H. berhasil dinonaktifkan.",
+  "data": {
+    "id": 4,
+    "is_active": 0
+  }
+}
+```
+
+---
+
+#### 7.7 DELETE /api/admin/lawyers/:id (Hapus Pengacara - Khusus Admin)
+
+##### Kasus 7.7.1: Gagal Dihapus karena Masih Memiliki Jadwal Janji Temu (400 Bad Request)
+* **Deskripsi**: Menghapus advokat yang ID-nya masih terikat di tabel `appointments` (misal ID: 1).
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/lawyers/1`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Pengacara ini tidak bisa dihapus karena masih memiliki jadwal konsultasi terkait. Nonaktifkan saja statusnya jika tidak lagi aktif."
+}
+```
+
+##### Kasus 7.7.2: Berhasil Dihapus (Advokat Tanpa Jadwal Terikat) (200 OK)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/lawyers/4`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Data pengacara Dewi Sartika, S.H., M.H. berhasil dihapus."
+}
+```
+* **Efek Samping**: File foto fisik pada disk `/uploads/lawyers/...` otomatis terhapus dengan aman.
+
 

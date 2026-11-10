@@ -21,6 +21,12 @@ lerna-debug.log*
 dist/
 build/
 
+# Uploaded files
+backend/uploads/*
+!backend/uploads/lawyers/
+backend/uploads/lawyers/*
+!backend/uploads/lawyers/.gitkeep
+
 # IDE and Editor files
 .vscode/
 .idea/

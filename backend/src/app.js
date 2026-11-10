@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
@@ -9,6 +10,7 @@ const authRoutes = require('../routes/authRoutes');
 const adminRoutes = require('../routes/adminRoutes');
 const appointmentRoutes = require('../routes/appointmentRoutes');
 const consultationRoutes = require('../routes/consultationRoutes');
+const lawyerRoutes = require('../routes/lawyerRoutes');
 const { errorHandler, notFoundHandler } = require('../middleware/errorHandler');
 
 const app = express();
@@ -39,6 +41,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Sajikan file statis folder uploads untuk akses foto pengacara
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Endpoint cek kesehatan server (health check)
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -53,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/consultations', consultationRoutes);
+app.use('/api/lawyers', lawyerRoutes);
 
 // Tangani route 404 (tidak ditemukan)
 app.use(notFoundHandler);
