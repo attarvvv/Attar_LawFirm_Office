@@ -3,7 +3,9 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const consultationController = require('../controllers/consultationController');
 const LawyerController = require('../controllers/lawyerController');
-const { handlePhotoUpload } = require('../middleware/uploadMiddleware');
+const CategoryController = require('../controllers/categoryController');
+const ArticleController = require('../controllers/articleController');
+const { handlePhotoUpload, handleThumbnailUpload } = require('../middleware/uploadMiddleware');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 
 // GET /api/admin/dashboard-stub - Ringkasan dashboard shell (Dapat diakses admin, lawyer, staff)
@@ -42,5 +44,40 @@ router.patch('/lawyers/:id/toggle-active', verifyToken, requireRole('admin'), La
 
 // DELETE /api/admin/lawyers/:id - Hapus pengacara permanen (khusus admin, penanganan FK restrict jadwal)
 router.delete('/lawyers/:id', verifyToken, requireRole('admin'), LawyerController.destroy);
+
+// Rute manajemen kategori artikel (Categories CRUD)
+// GET /api/admin/categories - Seluruh staf dan pengacara dapat melihat kategori untuk dropdown artikel
+router.get('/categories', verifyToken, CategoryController.index);
+
+// GET /api/admin/categories/:id - Detail satu kategori
+router.get('/categories/:id', verifyToken, CategoryController.show);
+
+// POST /api/admin/categories - Tambah kategori baru (khusus admin)
+router.post('/categories', verifyToken, requireRole('admin'), CategoryController.store);
+
+// PUT /api/admin/categories/:id - Perbarui kategori (khusus admin)
+router.put('/categories/:id', verifyToken, requireRole('admin'), CategoryController.update);
+
+// DELETE /api/admin/categories/:id - Hapus kategori (khusus admin, penanganan FK restrict jika ada artikel terikat)
+router.delete('/categories/:id', verifyToken, requireRole('admin'), CategoryController.destroy);
+
+// Rute manajemen artikel edukasi hukum (Articles CRUD)
+// GET /api/admin/articles - Seluruh pengguna internal dapat melihat daftar draf dan terbit
+router.get('/articles', verifyToken, ArticleController.index);
+
+// GET /api/admin/articles/:id - Detail artikel lengkap untuk form edit
+router.get('/articles/:id', verifyToken, ArticleController.show);
+
+// POST /api/admin/articles - Buat artikel baru (dapat dibuat oleh staf/pengacara/admin, author_id otomatis dari token)
+router.post('/articles', verifyToken, handleThumbnailUpload, ArticleController.store);
+
+// PUT /api/admin/articles/:id - Perbarui artikel (hanya penulis artikel asli atau admin)
+router.put('/articles/:id', verifyToken, handleThumbnailUpload, ArticleController.update);
+
+// PATCH /api/admin/articles/:id/status - Ubah status publikasi draft/published (hanya penulis atau admin)
+router.patch('/articles/:id/status', verifyToken, ArticleController.updateStatus);
+
+// DELETE /api/admin/articles/:id - Hapus artikel (hanya penulis artikel asli atau admin)
+router.delete('/articles/:id', verifyToken, ArticleController.destroy);
 
 module.exports = router;

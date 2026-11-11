@@ -58,6 +58,18 @@ const statusConfig = {
     label: 'Nonaktif',
     textClass: 'text-gray-500',
     dotClass: 'bg-gray-400'
+  },
+
+  // Status Artikel (Articles)
+  draft: {
+    label: 'Draf',
+    textClass: 'text-amber-700',
+    dotClass: 'bg-amber-500'
+  },
+  published: {
+    label: 'Terbit',
+    textClass: 'text-emerald-700',
+    dotClass: 'bg-emerald-500'
   }
 };
 

@@ -26,6 +26,9 @@ backend/uploads/*
 !backend/uploads/lawyers/
 backend/uploads/lawyers/*
 !backend/uploads/lawyers/.gitkeep
+!backend/uploads/articles/
+backend/uploads/articles/*
+!backend/uploads/articles/.gitkeep
 
 # IDE and Editor files
 .vscode/

@@ -20,15 +20,22 @@ const fileFilter = (req, file, cb) => {
 };
 
 // Batas ukuran maksimal file foto 2MB (2 * 1024 * 1024 byte)
-const upload = multer({
+const uploadPhoto = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter
 }).single('photo');
 
-// Middleware pembungkus untuk menangani error upload dari multer dengan pesan bahasa Indonesia
+// Batas ukuran maksimal file thumbnail artikel 2MB
+const uploadThumbnail = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter
+}).single('thumbnail');
+
+// Middleware pembungkus untuk menangani error upload foto pengacara
 function handlePhotoUpload(req, res, next) {
-  upload(req, res, (err) => {
+  uploadPhoto(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({
@@ -50,7 +57,31 @@ function handlePhotoUpload(req, res, next) {
   });
 }
 
-// Fungsi konversi buffer gambar menjadi file WebP terkompresi
+// Middleware pembungkus untuk menangani error upload thumbnail artikel
+function handleThumbnailUpload(req, res, next) {
+  uploadThumbnail(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          success: false,
+          message: 'Ukuran file thumbnail melebihi batas maksimal 2MB.'
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: `Gagal mengunggah thumbnail: ${err.message}`
+      });
+    } else if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'Terjadi kesalahan saat validasi file thumbnail.'
+      });
+    }
+    next();
+  });
+}
+
+// Fungsi konversi buffer gambar menjadi file WebP terkompresi untuk pengacara
 // Kualitas diatur ~80 dan lebar maksimal dibatasi 800px agar ukuran file tetap ringan tanpa mengorbankan ketajaman foto profil
 async function processAndSavePhoto(buffer) {
   const uploadDir = path.join(__dirname, '../uploads/lawyers');
@@ -77,7 +108,34 @@ async function processAndSavePhoto(buffer) {
   return `/uploads/lawyers/${filename}`;
 }
 
-// Fungsi pembantu untuk menghapus file foto lama dari disk saat foto diperbarui atau pengacara dihapus
+// Fungsi konversi buffer gambar menjadi file WebP terkompresi untuk thumbnail artikel
+// Kualitas diatur ~80 dan lebar maksimal 800px untuk menjaga performa loading halaman artikel
+async function processAndSaveThumbnail(buffer) {
+  const uploadDir = path.join(__dirname, '../uploads/articles');
+
+  // Pastikan folder penyimpanan tersedia
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  // Generate nama file unik untuk thumbnail artikel
+  const filename = `article-${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
+  const fullPath = path.join(uploadDir, filename);
+
+  // Kompresi ke format WebP dengan batas lebar 800px
+  await sharp(buffer)
+    .resize(800, null, {
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .webp({ quality: 80 })
+    .toFile(fullPath);
+
+  // Kembalikan path relatif untuk disimpan ke kolom thumbnail
+  return `/uploads/articles/${filename}`;
+}
+
+// Fungsi pembantu untuk menghapus file lama dari disk saat aset diperbarui atau data dihapus
 function deletePhotoFile(relativePath) {
   if (!relativePath) return;
   try {
@@ -90,13 +148,15 @@ function deletePhotoFile(relativePath) {
     }
   } catch (err) {
     // Tangani kegagalan penghapusan file lama agar tidak membatalkan respons utama
-    console.warn(`[Peringatan] Gagal menghapus file foto lama (${relativePath}):`, err.message);
+    console.warn(`[Peringatan] Gagal menghapus file lama (${relativePath}):`, err.message);
   }
 }
 
 module.exports = {
   handlePhotoUpload,
+  handleThumbnailUpload,
   processAndSavePhoto,
+  processAndSaveThumbnail,
   deletePhotoFile
 };
 

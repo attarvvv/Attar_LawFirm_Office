@@ -1014,3 +1014,371 @@ Modul ini mengelola profil advokat kantor hukum menggunakan arsitektur OOP (`Law
 * **Efek Samping**: File foto fisik pada disk `/uploads/lawyers/...` otomatis terhapus dengan aman.
 
 
+---
+
+### Skenario 8: Pengelolaan Kategori & Artikel Berita (OOP CRUD & Upload Thumbnail)
+
+Skenario ini memverifikasi fungsionalitas manajemen Kategori dan Artikel (Draft / Published), sistem otorisasi berbasis peran (RBAC) dan kepemilikan penulis (*author-or-admin*), serta konversi otomatis thumbnail WebP.
+
+---
+
+#### 8.1 GET /api/categories (Daftar Kategori Publik)
+
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/categories`
+* **Akses**: Publik (tanpa autentikasi)
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Daftar kategori berhasil dimuat.",
+  "data": [
+    {
+      "id": 1,
+      "name": "Hukum Pidana & Korupsi",
+      "slug": "hukum-pidana-korupsi",
+      "created_at": "2026-11-11T13:24:00.000Z",
+      "articles_count": 5
+    }
+  ]
+}
+```
+
+---
+
+#### 8.2 POST /api/admin/categories (Tambah Kategori - Khusus Admin)
+
+##### Kasus 8.2.1: Ditolak jika Bukan Admin (403 Forbidden)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/categories`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "name": "Hukum Tata Negara"
+}
+```
+* **Expected Status**: `403 Forbidden`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Fitur ini hanya dapat diakses oleh Administrator."
+}
+```
+
+##### Kasus 8.2.2: Berhasil Ditambahkan oleh Admin (201 Created)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/categories`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "name": "Hukum Pidana & Korupsi"
+}
+```
+* **Expected Status**: `201 Created`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Kategori 'Hukum Pidana & Korupsi' berhasil dibuat.",
+  "data": {
+    "id": 1,
+    "name": "Hukum Pidana & Korupsi",
+    "slug": "hukum-pidana-korupsi",
+    "created_at": "2026-11-11T13:24:00.000Z",
+    "articles_count": 0
+  }
+}
+```
+
+---
+
+#### 8.3 DELETE /api/admin/categories/:id (Hapus Kategori - Khusus Admin)
+
+##### Kasus 8.3.1: Gagal Dihapus karena Masih Memiliki Artikel Terkait (400 Bad Request)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/categories/1`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Kategori ini tidak bisa dihapus karena masih memiliki artikel terkait. Pindahkan atau hapus artikel tersebut terlebih dahulu."
+}
+```
+
+##### Kasus 8.3.2: Berhasil Dihapus (Kategori Kosong) (200 OK)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/categories/2`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Kategori 'Kategori Sementara' berhasil dihapus."
+}
+```
+
+---
+
+#### 8.4 GET /api/articles (Daftar Artikel Publik - Terbit Saja)
+
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/articles?page=1&limit=10&category=hukum-pidana-korupsi&search=waris`
+* **Akses**: Publik
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Daftar artikel terbit berhasil dimuat.",
+  "data": [
+    {
+      "id": 1,
+      "title": "Panduan Hukum Waris Menurut KUHPerdata",
+      "slug": "panduan-hukum-waris-menurut-kuhperdata",
+      "category_id": 1,
+      "author_id": 1,
+      "thumbnail": "/uploads/articles/thumbnail-1762867440000-841920.webp",
+      "status": "published",
+      "published_at": "2026-11-11T13:24:00.000Z",
+      "created_at": "2026-11-11T13:24:00.000Z",
+      "updated_at": "2026-11-11T13:24:00.000Z",
+      "category_name": "Hukum Pidana & Korupsi",
+      "category_slug": "hukum-pidana-korupsi",
+      "author_name": "Muhammad Attar Putra Pratama"
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+#### 8.5 GET /api/articles/:slug (Detail Artikel Publik Berdasarkan Slug)
+
+##### Kasus 8.5.1: Artikel Masih Berstatus Draft atau Tidak Ditemukan (404 Not Found)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/articles/artikel-masih-draft`
+* **Expected Status**: `404 Not Found`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Artikel tidak ditemukan atau belum dipublikasikan."
+}
+```
+
+##### Kasus 8.5.2: Artikel Berhasil Dimuat (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/articles/panduan-hukum-waris-menurut-kuhperdata`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Panduan Hukum Waris Menurut KUHPerdata",
+    "slug": "panduan-hukum-waris-menurut-kuhperdata",
+    "category_id": 1,
+    "author_id": 1,
+    "thumbnail": "/uploads/articles/thumbnail-1762867440000-841920.webp",
+    "content": "<p>Ini adalah panduan komprehensif...</p>",
+    "status": "published",
+    "published_at": "2026-11-11T13:24:00.000Z",
+    "category_name": "Hukum Pidana & Korupsi",
+    "author_name": "Muhammad Attar Putra Pratama"
+  }
+}
+```
+
+---
+
+#### 8.6 GET /api/admin/articles (Daftar Artikel Internal Portal)
+
+##### Kasus 8.6.1: Ditolak jika Belum Login (401 Unauthorized)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/articles`
+* **Expected Status**: `401 Unauthorized`
+
+##### Kasus 8.6.2: Berhasil Dimuat untuk Pengguna Internal (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/articles?status=all`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Data artikel internal berhasil dimuat.",
+  "stats": {
+    "total": 3,
+    "draft": 1,
+    "published": 2
+  },
+  "counts": {
+    "total": 3,
+    "draft": 1,
+    "published": 2
+  },
+  "data": [
+    {
+      "id": 1,
+      "title": "Panduan Hukum Waris Terkini",
+      "slug": "panduan-hukum-waris-terkini",
+      "status": "draft",
+      "author_name": "Muhammad Attar Putra Pratama",
+      "author_role": "staff"
+    }
+  ]
+}
+```
+
+---
+
+#### 8.7 POST /api/admin/articles (Buat Artikel Baru - Multipart Form-Data)
+
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/articles`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Body (`form-data`)**:
+  * `title`: `Panduan Hukum Waris Menurut KUHPerdata`
+  * `category_id`: `1`
+  * `content`: `<p>Isi panduan komprehensif...</p>`
+  * `status`: `draft`
+  * `thumbnail`: `[File Gambar .jpg / .png]`
+* **Expected Status**: `201 Created`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Artikel 'Panduan Hukum Waris Menurut KUHPerdata' berhasil disimpan.",
+  "data": {
+    "id": 1,
+    "title": "Panduan Hukum Waris Menurut KUHPerdata",
+    "slug": "panduan-hukum-waris-menurut-kuhperdata",
+    "category_id": 1,
+    "author_id": 1,
+    "thumbnail": "/uploads/articles/thumbnail-1762867440000-841920.webp",
+    "status": "draft",
+    "published_at": null
+  }
+}
+```
+
+---
+
+#### 8.8 PUT /api/admin/articles/:id (Perbarui Artikel - Author atau Admin)
+
+##### Kasus 8.8.1: Ditolak jika Pengguna Lain yang Mencoba Edit (403 Forbidden)
+* **Method**: `PUT`
+* **URL**: `{{baseUrl}}/admin/articles/1`
+* **Headers**: `Authorization: Bearer {{other_user_token}}`
+* **Body (raw JSON / form-data)**:
+```json
+{
+  "title": "Percobaan Modifikasi Ilegal"
+}
+```
+* **Expected Status**: `403 Forbidden`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Anda hanya dapat mengubah atau memperbarui artikel yang Anda tulis sendiri."
+}
+```
+
+##### Kasus 8.8.2: Berhasil Diperbarui oleh Penulis atau Admin (200 OK)
+* **Method**: `PUT`
+* **URL**: `{{baseUrl}}/admin/articles/1`
+* **Headers**: `Authorization: Bearer {{staff_token}}` (atau `{{admin_token}}`)
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Artikel 'Panduan Hukum Waris Terkini (Revisi Penulis)' berhasil diperbarui.",
+  "data": {
+    "id": 1,
+    "title": "Panduan Hukum Waris Terkini (Revisi Penulis)",
+    "slug": "panduan-hukum-waris-terkini-revisi-penulis"
+  }
+}
+```
+
+---
+
+#### 8.9 PATCH /api/admin/articles/:id/status (Ubah Status Draft / Terbit)
+
+##### Kasus 8.9.1: Ditolak jika Bukan Penulis / Admin (403 Forbidden)
+* **Method**: `PATCH`
+* **URL**: `{{baseUrl}}/admin/articles/1/status`
+* **Headers**: `Authorization: Bearer {{other_user_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "status": "published"
+}
+```
+* **Expected Status**: `403 Forbidden`
+
+##### Kasus 8.9.2: Publikasi Pertama Kali (Mengisi Timestamp `published_at`) (200 OK)
+* **Method**: `PATCH`
+* **URL**: `{{baseUrl}}/admin/articles/1/status`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "status": "published"
+}
+```
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Status artikel berhasil diubah menjadi 'published'.",
+  "data": {
+    "id": 1,
+    "status": "published",
+    "published_at": "2026-11-11T13:24:00.000Z"
+  }
+}
+```
+* **Catatan**: Jika status dikembalikan ke `draft` lalu di-`published` kembali, nilai `published_at` awal akan tetap dipertahankan dan tidak ditimpa dengan waktu baru.
+
+---
+
+#### 8.10 DELETE /api/admin/articles/:id (Hapus Artikel - Author atau Admin)
+
+##### Kasus 8.10.1: Ditolak jika Bukan Penulis / Admin (403 Forbidden)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/articles/1`
+* **Headers**: `Authorization: Bearer {{other_user_token}}`
+* **Expected Status**: `403 Forbidden`
+
+##### Kasus 8.10.2: Berhasil Dihapus oleh Penulis atau Admin (200 OK)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/articles/1`
+* **Headers**: `Authorization: Bearer {{staff_token}}` (atau `{{admin_token}}`)
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Artikel 'Panduan Hukum Waris Terkini (Revisi Penulis)' berhasil dihapus."
+}
+```
+* **Efek Samping**: File thumbnail WebP pada folder fisik `backend/uploads/articles/...` otomatis dibersihkan dari penyimpanan disk.

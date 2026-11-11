@@ -11,6 +11,8 @@ const adminRoutes = require('../routes/adminRoutes');
 const appointmentRoutes = require('../routes/appointmentRoutes');
 const consultationRoutes = require('../routes/consultationRoutes');
 const lawyerRoutes = require('../routes/lawyerRoutes');
+const categoryRoutes = require('../routes/categoryRoutes');
+const articleRoutes = require('../routes/articleRoutes');
 const { errorHandler, notFoundHandler } = require('../middleware/errorHandler');
 
 const app = express();
@@ -59,6 +61,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/consultations', consultationRoutes);
 app.use('/api/lawyers', lawyerRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/articles', articleRoutes);
 
 // Tangani route 404 (tidak ditemukan)
 app.use(notFoundHandler);

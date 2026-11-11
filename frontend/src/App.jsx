@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
 import Consultations from './pages/Consultations';
 import Lawyers from './pages/Lawyers';
+import Articles from './pages/Articles';
 
 export default function App() {
   return (
@@ -57,10 +58,12 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      {/* Alias untuk Janji Temu, Konsultasi, dan Pengacara */}
+      {/* Alias untuk Janji Temu, Konsultasi, Pengacara, dan Artikel */}
       <Route path="/admin/janji-temu" element={<Navigate to="/admin/appointments" replace />} />
       <Route path="/admin/konsultasi" element={<Navigate to="/admin/consultations" replace />} />
       <Route path="/admin/pengacara" element={<Navigate to="/admin/lawyers" replace />} />
+      <Route path="/admin/articles" element={<ProtectedRoute><AdminLayout><Articles /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/artikel" element={<Navigate to="/admin/articles" replace />} />
 
       {/* Pengalihan Default */}
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
