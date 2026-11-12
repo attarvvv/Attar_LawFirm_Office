@@ -16,8 +16,10 @@ class AppointmentModel {
         a.service_id,
         DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointment_date,
         a.appointment_time,
+        a.meeting_location,
         a.notes,
         a.status,
+        a.confirmation_sent_at,
         a.admin_notes,
         a.created_at,
         a.updated_at,
@@ -64,8 +66,10 @@ class AppointmentModel {
         a.service_id,
         DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointment_date,
         a.appointment_time,
+        a.meeting_location,
         a.notes,
         a.status,
+        a.confirmation_sent_at,
         a.admin_notes,
         a.created_at,
         a.updated_at,
@@ -81,6 +85,114 @@ class AppointmentModel {
     `;
     const [rows] = await pool.execute(query, [id]);
     return rows.length > 0 ? rows[0] : null;
+  }
+
+  // Buat kode booking unik dengan format APT-{tahun}-{sequence}
+  static async generateBookingCode() {
+    const currentYear = new Date().getFullYear();
+    const prefix = `APT-${currentYear}-`;
+    const query = `
+      SELECT booking_code 
+      FROM appointments 
+      WHERE booking_code LIKE ? 
+      ORDER BY id DESC 
+      LIMIT 1
+    `;
+    const [rows] = await pool.execute(query, [`${prefix}%`]);
+    let nextSeq = 1;
+    if (rows.length > 0 && rows[0].booking_code) {
+      const parts = rows[0].booking_code.split('-');
+      const lastSeq = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastSeq)) {
+        nextSeq = lastSeq + 1;
+      }
+    }
+    return `${prefix}${String(nextSeq).padStart(3, '0')}`;
+  }
+
+  // Tambah janji temu baru (misal saat konversi dari data konsultasi)
+  static async create({
+    booking_code,
+    client_name,
+    client_email,
+    client_phone,
+    lawyer_id,
+    service_id,
+    appointment_date,
+    appointment_time,
+    notes = null,
+    status = 'pending',
+    meeting_location = null,
+    admin_notes = null
+  }) {
+    const query = `
+      INSERT INTO appointments (
+        booking_code,
+        client_name,
+        client_email,
+        client_phone,
+        lawyer_id,
+        service_id,
+        appointment_date,
+        appointment_time,
+        notes,
+        status,
+        meeting_location,
+        admin_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const params = [
+      booking_code,
+      client_name,
+      client_email,
+      client_phone,
+      lawyer_id,
+      service_id,
+      appointment_date,
+      appointment_time,
+      notes,
+      status,
+      meeting_location,
+      admin_notes
+    ];
+
+    const [result] = await pool.execute(query, params);
+    return await this.findById(result.insertId);
+  }
+
+  // Perbarui data janji temu fleksibel (status, meeting_location, admin_notes)
+  static async update(id, { status, meeting_location, admin_notes }) {
+    const updates = [];
+    const params = [];
+
+    if (status !== undefined) {
+      updates.push('status = ?');
+      params.push(status);
+    }
+
+    if (meeting_location !== undefined) {
+      updates.push('meeting_location = ?');
+      params.push(meeting_location);
+    }
+
+    if (admin_notes !== undefined) {
+      updates.push('admin_notes = ?');
+      params.push(admin_notes);
+    }
+
+    if (updates.length === 0) return true;
+
+    params.push(id);
+    const query = `UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`;
+    const [result] = await pool.execute(query, params);
+    return result.affectedRows > 0;
+  }
+
+  // Catat waktu pengiriman konfirmasi WhatsApp
+  static async markConfirmationSent(id) {
+    const query = `UPDATE appointments SET confirmation_sent_at = NOW() WHERE id = ?`;
+    const [result] = await pool.execute(query, [id]);
+    return result.affectedRows > 0;
   }
 
   // Perbarui status dan catatan admin untuk janji temu

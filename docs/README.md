@@ -1382,3 +1382,255 @@ Skenario ini memverifikasi fungsionalitas manajemen Kategori dan Artikel (Draft 
 }
 ```
 * **Efek Samping**: File thumbnail WebP pada folder fisik `backend/uploads/articles/...` otomatis dibersihkan dari penyimpanan disk.
+
+
+---
+
+### Skenario 9: Pengelolaan Bidang Keahlian / Layanan Hukum (Services Management)
+
+Skenario ini memverifikasi endpoint publik `GET /api/services` untuk konsumsi Halaman Utama (Landing Page), proteksi endpoint internal `GET /api/admin/services`, serta hak akses eksklusif Administrator untuk operasi CRUD (`POST`, `PUT`, `DELETE`) dan validasi ketat kunci ikon kurasi.
+
+---
+
+#### 9.1 GET /api/services (Daftar Bidang Keahlian Publik)
+
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/services`
+* **Akses**: Publik (tanpa header Authorization)
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Daftar bidang keahlian publik berhasil dimuat.",
+  "data": [
+    {
+      "id": 1,
+      "title": "Hukum Bisnis & Korporasi",
+      "slug": "hukum-bisnis-korporasi",
+      "description": "Konsultasi pendirian badan usaha, kontrak bisnis, dan kepatuhan regulasi.",
+      "icon": "FaBriefcase",
+      "created_at": "2026-11-07T08:29:17.000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### 9.2 GET /api/admin/services (Daftar Bidang Keahlian Internal Portal)
+
+##### Kasus 9.2.1: Ditolak jika Belum Terautentikasi (401 Unauthorized)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/services`
+* **Expected Status**: `401 Unauthorized`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Token autentikasi tidak ditemukan."
+}
+```
+
+##### Kasus 9.2.2: Berhasil Dimuat oleh Pengguna Internal (Staff/Lawyer/Admin) (200 OK)
+* **Method**: `GET`
+* **URL**: `{{baseUrl}}/admin/services`
+* **Headers**: `Authorization: Bearer {{staff_token}}` (atau `{{admin_token}}`)
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Data bidang keahlian internal berhasil dimuat.",
+  "data": [
+    {
+      "id": 1,
+      "title": "Hukum Bisnis & Korporasi",
+      "slug": "hukum-bisnis-korporasi",
+      "description": "Konsultasi pendirian badan usaha, kontrak bisnis, dan kepatuhan regulasi.",
+      "icon": "FaBriefcase",
+      "created_at": "2026-11-07T08:29:17.000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### 9.3 POST /api/admin/services (Tambah Bidang Keahlian Baru - Khusus Admin)
+
+##### Kasus 9.3.1: Ditolak jika Bukan Administrator (403 Forbidden)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/services`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "Hukum Kepailitan & PKPU",
+  "icon": "FaBalanceScale"
+}
+```
+* **Expected Status**: `403 Forbidden`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Akses ditolak. Fitur ini hanya dapat diakses oleh Administrator."
+}
+```
+
+##### Kasus 9.3.2: Ditolak jika Ikon Tidak Terdaftar dalam Daftar Kurasi (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/services`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "Hukum Lingkungan",
+  "icon": "FaRandomInvalidIcon"
+}
+```
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Ikon bidang keahlian tidak valid. Pilih dari daftar ikon yang tersedia."
+}
+```
+
+##### Kasus 9.3.3: Ditolak jika Field Judul Tidak Diisi (400 Bad Request)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/services`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "",
+  "description": "Deskripsi tanpa judul",
+  "icon": "FaGavel"
+}
+```
+* **Expected Status**: `400 Bad Request`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Judul bidang keahlian wajib diisi."
+}
+```
+
+##### Kasus 9.3.4: Berhasil Dibuat oleh Admin dengan Ikon Sah (201 Created)
+* **Method**: `POST`
+* **URL**: `{{baseUrl}}/admin/services`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "Hukum Pajak & Keuangan",
+  "description": "Konsultasi sengketa pajak dan audit kepatuhan perpajakan perusahaan.",
+  "icon": "FaUniversity"
+}
+```
+* **Expected Status**: `201 Created`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Bidang keahlian 'Hukum Pajak & Keuangan' berhasil dibuat.",
+  "data": {
+    "id": 5,
+    "title": "Hukum Pajak & Keuangan",
+    "slug": "hukum-pajak-keuangan",
+    "description": "Konsultasi sengketa pajak dan audit kepatuhan perpajakan perusahaan.",
+    "icon": "FaUniversity",
+    "created_at": "2026-11-12T11:03:29.000Z"
+  }
+}
+```
+
+---
+
+#### 9.4 PUT /api/admin/services/:id (Perbarui Bidang Keahlian - Khusus Admin)
+
+##### Kasus 9.4.1: Ditolak jika Bukan Administrator (403 Forbidden)
+* **Method**: `PUT`
+* **URL**: `{{baseUrl}}/admin/services/5`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "Percobaan Modifikasi Staf"
+}
+```
+* **Expected Status**: `403 Forbidden`
+
+##### Kasus 9.4.2: ID Bidang Keahlian Tidak Ditemukan (404 Not Found)
+* **Method**: `PUT`
+* **URL**: `{{baseUrl}}/admin/services/9999`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "Judul Baru"
+}
+```
+* **Expected Status**: `404 Not Found`
+* **Expected Response Body**:
+```json
+{
+  "success": false,
+  "message": "Bidang keahlian tidak ditemukan."
+}
+```
+
+##### Kasus 9.4.3: Berhasil Diperbarui oleh Admin (200 OK)
+* **Method**: `PUT`
+* **URL**: `{{baseUrl}}/admin/services/5`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Body (raw JSON)**:
+```json
+{
+  "title": "Hukum Perpajakan & Keuangan Bisnis",
+  "description": "Pendampingan keberatan pajak, banding di pengadilan pajak, dan audit kepatuhan fiskal.",
+  "icon": "FaUniversity"
+}
+```
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Bidang keahlian 'Hukum Perpajakan & Keuangan Bisnis' berhasil diperbarui.",
+  "data": {
+    "id": 5,
+    "title": "Hukum Perpajakan & Keuangan Bisnis",
+    "slug": "hukum-perpajakan-keuangan-bisnis",
+    "description": "Pendampingan keberatan pajak, banding di pengadilan pajak, dan audit kepatuhan fiskal.",
+    "icon": "FaUniversity"
+  }
+}
+```
+
+---
+
+#### 9.5 DELETE /api/admin/services/:id (Hapus Bidang Keahlian - Khusus Admin)
+
+##### Kasus 9.5.1: Ditolak jika Bukan Administrator (403 Forbidden)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/services/5`
+* **Headers**: `Authorization: Bearer {{staff_token}}`
+* **Expected Status**: `403 Forbidden`
+
+##### Kasus 9.5.2: Berhasil Dihapus oleh Admin (200 OK)
+* **Method**: `DELETE`
+* **URL**: `{{baseUrl}}/admin/services/5`
+* **Headers**: `Authorization: Bearer {{admin_token}}`
+* **Expected Status**: `200 OK`
+* **Expected Response Body**:
+```json
+{
+  "success": true,
+  "message": "Bidang keahlian 'Hukum Perpajakan & Keuangan Bisnis' berhasil dihapus."
+}
+```

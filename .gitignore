@@ -30,6 +30,10 @@ backend/uploads/lawyers/*
 backend/uploads/articles/*
 !backend/uploads/articles/.gitkeep
 
+# WhatsApp session cache
+backend/whatsapp-session/*
+!backend/whatsapp-session/.gitkeep
+
 # IDE and Editor files
 .vscode/
 .idea/

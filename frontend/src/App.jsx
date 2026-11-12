@@ -9,11 +9,14 @@ import Appointments from './pages/Appointments';
 import Consultations from './pages/Consultations';
 import Lawyers from './pages/Lawyers';
 import Articles from './pages/Articles';
+import Services from './pages/Services';
+import LandingPage from './pages/LandingPage';
 
 export default function App() {
   return (
     <Routes>
       {/* Rute Publik */}
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
@@ -58,17 +61,37 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      {/* Alias untuk Janji Temu, Konsultasi, Pengacara, dan Artikel */}
+      <Route
+        path="/admin/services"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Services />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/articles"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Articles />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Alias untuk Janji Temu, Konsultasi, Pengacara, Bidang Keahlian, dan Artikel */}
       <Route path="/admin/janji-temu" element={<Navigate to="/admin/appointments" replace />} />
       <Route path="/admin/konsultasi" element={<Navigate to="/admin/consultations" replace />} />
       <Route path="/admin/pengacara" element={<Navigate to="/admin/lawyers" replace />} />
-      <Route path="/admin/articles" element={<ProtectedRoute><AdminLayout><Articles /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/bidang-keahlian" element={<Navigate to="/admin/services" replace />} />
+      <Route path="/admin/layanan" element={<Navigate to="/admin/services" replace />} />
       <Route path="/admin/artikel" element={<Navigate to="/admin/articles" replace />} />
 
       {/* Pengalihan Default */}
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

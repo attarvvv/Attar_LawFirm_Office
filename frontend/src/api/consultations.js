@@ -49,7 +49,7 @@ export async function fetchConsultationDetail(id) {
   return data;
 }
 
-// Perbarui status konsultasi (misalnya: 'replied' atau 'archived')
+// Perbarui status konsultasi (misalnya: 'replied', 'archived', atau 'converted')
 export async function updateConsultationStatus(id, { status }) {
   const response = await fetch(`${API_BASE_URL}/admin/consultations/${id}/status`, {
     method: 'PATCH',
@@ -61,6 +61,23 @@ export async function updateConsultationStatus(id, { status }) {
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.message || 'Gagal memperbarui status konsultasi.');
+  }
+
+  return data;
+}
+
+// Konversi data konsultasi menjadi janji temu resmi
+export async function convertToAppointment(id, { lawyer_id, appointment_date, appointment_time }) {
+  const response = await fetch(`${API_BASE_URL}/admin/consultations/${id}/convert-to-appointment`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ lawyer_id, appointment_date, appointment_time })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Gagal mengonversi konsultasi ke janji temu.');
   }
 
   return data;

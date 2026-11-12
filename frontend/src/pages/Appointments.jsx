@@ -2,8 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import StatusBadge from '../components/StatusBadge';
 import {
   fetchAppointments,
+  updateAppointment,
   updateAppointmentStatus,
-  seedSampleAppointments
+  sendAppointmentConfirmation,
+  seedSampleAppointments,
+  MEETING_LOCATION_OPTIONS
 } from '../api/appointments';
 import {
   FaCalendarAlt,
@@ -21,7 +24,9 @@ import {
   FaInfoCircle,
   FaCheckCircle,
   FaStickyNote,
-  FaCommentDots
+  FaCommentDots,
+  FaMapMarkerAlt,
+  FaWhatsapp
 } from 'react-icons/fa';
 
 export default function Appointments() {
@@ -38,8 +43,13 @@ export default function Appointments() {
   // Modal State untuk Edit Status & Catatan Admin
   const [activeModalData, setActiveModalData] = useState(null);
   const [modalStatus, setModalStatus] = useState('');
+  const [modalMeetingLocation, setModalMeetingLocation] = useState('');
   const [modalAdminNotes, setModalAdminNotes] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
+
+  // State proses pengiriman notifikasi WhatsApp & notifikasi Toast
+  const [sendingWaId, setSendingWaId] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Ambil data janji temu dari server
   const loadAppointments = async (status = statusFilter, search = appliedSearch) => {
@@ -74,28 +84,68 @@ export default function Appointments() {
     setAppliedSearch('');
   };
 
-  // Quick Action: Ubah Status Langsung
-  const handleQuickStatusChange = async (id, newStatus) => {
-    const confirmMessage = {
-      confirmed: 'Konfirmasi dan jadwalkan janji temu ini?',
-      completed: 'Tandai konsultasi janji temu ini sebagai telah SELESAI?',
-      cancelled: 'Batalkan jadwal janji temu ini?'
-    }[newStatus] || 'Perbarui status janji temu?';
-
-    if (!window.confirm(confirmMessage)) return;
+  // Handler update inline (status & lokasi temu) dengan pembaruan UI optimis
+  const handleInlineUpdate = async (id, patchData) => {
+    // Pembaruan optimis pada state lokal
+    setAppointments((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patchData } : item))
+    );
 
     try {
-      await updateAppointmentStatus(id, { status: newStatus });
-      loadAppointments();
+      await updateAppointment(id, patchData);
+      setToastMessage('Data janji temu berhasil diperbarui');
+      setTimeout(() => setToastMessage(null), 3000);
+      // Sinkronkan ringkasan statistik
+      const statsRes = await fetchAppointments({ status: statusFilter, search: appliedSearch });
+      if (statsRes.success && statsRes.stats) {
+        setStats(statsRes.stats);
+      }
     } catch (err) {
-      alert(err.message || 'Gagal mengubah status.');
+      alert(err.message || 'Gagal memperbarui data janji temu.');
+      loadAppointments();
     }
+  };
+
+  // Handler pengiriman pesan konfirmasi via WhatsApp
+  const handleSendConfirmation = async (item) => {
+    if (item.status !== 'confirmed' || !item.meeting_location) {
+      alert('Pilih status Dikonfirmasi dan tentukan lokasi temu terlebih dahulu.');
+      return;
+    }
+
+    const isResend = Boolean(item.confirmation_sent_at);
+    if (isResend && !window.confirm('Kirim ulang pesan konfirmasi WhatsApp ke nomor klien?')) {
+      return;
+    }
+
+    setSendingWaId(item.id);
+    try {
+      const res = await sendAppointmentConfirmation(item.id);
+      if (res.success) {
+        // Perbarui data lokal
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === item.id ? { ...a, confirmation_sent_at: new Date().toISOString() } : a))
+        );
+        setToastMessage(res.message || 'Notifikasi WhatsApp terkirim ke klien!');
+        setTimeout(() => setToastMessage(null), 3500);
+      }
+    } catch (err) {
+      alert(err.message || 'Gagal mengirim pesan konfirmasi WhatsApp. Pastikan sesi WhatsApp terhubung.');
+    } finally {
+      setSendingWaId(null);
+    }
+  };
+
+  // Quick Action: Ubah Status Langsung
+  const handleQuickStatusChange = async (id, newStatus) => {
+    handleInlineUpdate(id, { status: newStatus });
   };
 
   // Buka Modal Detail & Catatan
   const openDetailModal = (item) => {
     setActiveModalData(item);
     setModalStatus(item.status);
+    setModalMeetingLocation(item.meeting_location || '');
     setModalAdminNotes(item.admin_notes || '');
   };
 
@@ -106,8 +156,9 @@ export default function Appointments() {
 
     setSubmittingAction(true);
     try {
-      await updateAppointmentStatus(activeModalData.id, {
+      await updateAppointment(activeModalData.id, {
         status: modalStatus,
+        meeting_location: modalMeetingLocation,
         admin_notes: modalAdminNotes
       });
       setActiveModalData(null);
@@ -425,6 +476,24 @@ export default function Appointments() {
                     </div>
                   )}
 
+                  {/* Lokasi Pertemuan Inline — dropdown langsung auto-save */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1.5">
+                      <FaMapMarkerAlt className="text-accent" />
+                      Lokasi Temu
+                    </span>
+                    <select
+                      value={item.meeting_location || ''}
+                      onChange={(e) => handleInlineUpdate(item.id, { meeting_location: e.target.value })}
+                      className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white text-primary"
+                    >
+                      <option value="">— Pilih lokasi pertemuan —</option>
+                      {MEETING_LOCATION_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Catatan Internal Admin (Jika Ada) */}
                   {item.admin_notes && (
                     <div className="p-2.5 bg-blue-50/60 rounded-xl border border-blue-100 text-xs">
@@ -439,52 +508,77 @@ export default function Appointments() {
                   )}
                 </div>
 
-                {/* 3. Card Footer: Action Buttons Proporsional */}
-                <div className="p-4 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between gap-2">
-                  {/* Contextual Action Buttons */}
-                  <div className="flex items-center gap-2 flex-1">
-                    {item.status === 'pending' && (
-                      <button
-                        onClick={() => handleQuickStatusChange(item.id, 'confirmed')}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-light text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
-                        title="Setujui dan konfirmasi jadwal ini"
-                      >
-                        <FaCheck className="w-3 h-3 text-accent" />
-                        <span>Konfirmasi</span>
-                      </button>
-                    )}
-
-                    {item.status === 'confirmed' && (
-                      <button
-                        onClick={() => handleQuickStatusChange(item.id, 'completed')}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
-                        title="Tandai pertemuan ini telah selesai"
-                      >
-                        <FaCheckCircle className="w-3 h-3" />
-                        <span>Selesai</span>
-                      </button>
-                    )}
-
-                    {(item.status === 'pending' || item.status === 'confirmed') && (
-                      <button
-                        onClick={() => handleQuickStatusChange(item.id, 'cancelled')}
-                        className="px-2.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors"
-                        title="Batalkan janji temu"
-                      >
-                        <FaTimes className="w-3 h-3" />
-                      </button>
-                    )}
+                {/* 3. Card Footer: Status Dropdown + Tombol WA + Kelola */}
+                <div className="p-4 bg-gray-50/80 border-t border-gray-100 space-y-2.5">
+                  {/* Status Inline Dropdown — auto-save */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 whitespace-nowrap">Status</span>
+                    <select
+                      value={item.status}
+                      onChange={(e) => handleInlineUpdate(item.id, { status: e.target.value })}
+                      className="flex-1 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white text-primary"
+                    >
+                      <option value="pending">Menunggu Konfirmasi</option>
+                      <option value="confirmed">Dikonfirmasi</option>
+                      <option value="completed">Selesai</option>
+                      <option value="cancelled">Dibatalkan</option>
+                    </select>
                   </div>
 
-                  {/* Tombol Detail & Catatan */}
-                  <button
-                    onClick={() => openDetailModal(item)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary bg-white hover:bg-cream border border-gray-200 rounded-lg transition-colors shadow-xs"
-                    title="Buka detail lengkap dan catatan admin"
-                  >
-                    <FaEdit className="w-3 h-3 text-accent" />
-                    <span>Kelola</span>
-                  </button>
+                  {/* Baris bawah: Tombol WA + Tombol Kelola */}
+                  <div className="flex items-center gap-2">
+                    {/* Tombol Konfirmasi WhatsApp */}
+                    {item.status === 'confirmed' && item.meeting_location ? (
+                      item.confirmation_sent_at ? (
+                        // Sudah pernah terkirim — tampilkan status + opsi kirim ulang
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg flex-1 justify-center">
+                            <FaCheckCircle className="w-3 h-3" />
+                            WA Terkirim ✓
+                          </span>
+                          <button
+                            onClick={() => handleSendConfirmation(item)}
+                            disabled={sendingWaId === item.id}
+                            className="px-2.5 py-1.5 text-[11px] font-semibold text-gray-500 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors whitespace-nowrap"
+                            title="Kirim ulang notifikasi WhatsApp ke klien"
+                          >
+                            Kirim Ulang
+                          </button>
+                        </div>
+                      ) : (
+                        // Belum terkirim — tombol utama Kirim Konfirmasi WA
+                        <button
+                          onClick={() => handleSendConfirmation(item)}
+                          disabled={sendingWaId === item.id}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
+                          title="Kirim notifikasi konfirmasi ke WhatsApp klien"
+                        >
+                          <FaWhatsapp className="w-3.5 h-3.5" />
+                          {sendingWaId === item.id ? 'Mengirim...' : 'Kirim Konfirmasi WA'}
+                        </button>
+                      )
+                    ) : (
+                      // Status bukan confirmed atau lokasi belum dipilih — tombol disable + tooltip
+                      <button
+                        disabled
+                        title="Ubah status ke Dikonfirmasi dan pilih lokasi temu terlebih dahulu"
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
+                      >
+                        <FaWhatsapp className="w-3.5 h-3.5" />
+                        Konfirmasi WA
+                      </button>
+                    )}
+
+                    {/* Tombol Kelola (buka modal detail) */}
+                    <button
+                      onClick={() => openDetailModal(item)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary bg-white hover:bg-cream border border-gray-200 rounded-lg transition-colors shadow-xs flex-shrink-0"
+                      title="Buka detail lengkap dan catatan admin"
+                    >
+                      <FaEdit className="w-3 h-3 text-accent" />
+                      <span>Kelola</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -542,10 +636,27 @@ export default function Appointments() {
                 </select>
               </div>
 
+              {/* Pilihan Lokasi Temu di Modal */}
+              <div>
+                <label className="block font-bold text-primary mb-1">
+                  Lokasi Pertemuan
+                </label>
+                <select
+                  value={modalMeetingLocation}
+                  onChange={(e) => setModalMeetingLocation(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                >
+                  <option value="">— Belum ditentukan —</option>
+                  {MEETING_LOCATION_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Catatan Admin / Ruang Rapat */}
               <div>
                 <label className="block font-bold text-primary mb-1">
-                  Catatan Internal Admin / Ruang Rapat
+                  Catatan Internal Admin
                 </label>
                 <textarea
                   rows="3"
@@ -576,6 +687,20 @@ export default function Appointments() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notifikasi (muncul di kanan bawah setelah aksi berhasil) */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3 px-4 py-3 bg-primary text-white text-xs font-semibold rounded-xl shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+          <FaCheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
+          <span>{toastMessage}</span>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="ml-1 text-white/60 hover:text-white transition-colors"
+          >
+            <FaTimes className="w-3 h-3" />
+          </button>
         </div>
       )}
     </div>

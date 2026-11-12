@@ -21,5 +21,11 @@ router.get('/:id', appointmentController.getAppointmentById);
 // PATCH /api/appointments/:id/status - Update status janji temu
 router.patch('/:id/status', appointmentController.updateAppointmentStatus);
 
+// PATCH /api/appointments/:id - Update data janji temu (status, meeting_location, admin_notes)
+router.patch('/:id', appointmentController.updateAppointment);
+
+// POST /api/appointments/:id/send-confirmation - Kirim notifikasi konfirmasi WhatsApp
+router.post('/:id/send-confirmation', appointmentController.sendConfirmation);
+
 module.exports = router;
 

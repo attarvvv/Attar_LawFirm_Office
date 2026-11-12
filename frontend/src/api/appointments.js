@@ -2,6 +2,14 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+// Daftar opsi lokasi pertemuan yang telah terstandarisasi untuk janji temu
+export const MEETING_LOCATION_OPTIONS = [
+  'Kantor Pusat (Menara Keadilan Lt. 18, SCBD, Jakarta)',
+  'Konsultasi Online (Video Call / Google Meet / Zoom)',
+  'Kantor Klien (Wilayah Jabodetabek)',
+  'Ruang Mediasi Pengadilan / BANI'
+];
+
 // Fungsi bantuan untuk menyusun header request dan token autentikasi
 function getHeaders() {
   const headers = {
@@ -34,18 +42,39 @@ export async function fetchAppointments({ status = 'all', search = '' } = {}) {
   return data;
 }
 
-// Perbarui status janji temu dan catatan internal admin
-export async function updateAppointmentStatus(id, { status, admin_notes }) {
-  const response = await fetch(`${API_BASE_URL}/appointments/${id}/status`, {
+// Perbarui data janji temu fleksibel (status, meeting_location, admin_notes)
+export async function updateAppointment(id, { status, meeting_location, admin_notes }) {
+  const response = await fetch(`${API_BASE_URL}/appointments/${id}`, {
     method: 'PATCH',
     headers: getHeaders(),
     credentials: 'include',
-    body: JSON.stringify({ status, admin_notes })
+    body: JSON.stringify({ status, meeting_location, admin_notes })
   });
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || 'Gagal memperbarui status janji temu.');
+    throw new Error(data.message || 'Gagal memperbarui data janji temu.');
+  }
+
+  return data;
+}
+
+// Perbarui status janji temu dan catatan internal admin (kompatibilitas)
+export async function updateAppointmentStatus(id, { status, admin_notes }) {
+  return updateAppointment(id, { status, admin_notes });
+}
+
+// Kirim notifikasi konfirmasi janji temu resmi ke nomor WhatsApp klien
+export async function sendAppointmentConfirmation(id) {
+  const response = await fetch(`${API_BASE_URL}/appointments/${id}/send-confirmation`, {
+    method: 'POST',
+    headers: getHeaders(),
+    credentials: 'include'
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Gagal mengirim konfirmasi WhatsApp.');
   }
 
   return data;

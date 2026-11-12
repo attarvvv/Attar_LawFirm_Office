@@ -27,6 +27,26 @@ export function getThumbnailUrl(thumbnailPath) {
   return `${SERVER_BASE_URL}${cleanPath}`;
 }
 
+// Ambil daftar artikel publik untuk landing page dan pembaca (hanya artikel berstatus published)
+export async function fetchPublicArticles({ limit = 3, page = 1, category = '', search = '' } = {}) {
+  const params = new URLSearchParams();
+  if (limit) params.append('limit', limit);
+  if (page) params.append('page', page);
+  if (category) params.append('category', category);
+  if (search) params.append('search', search);
+
+  const response = await fetch(`${API_BASE_URL}/articles?${params.toString()}`, {
+    method: 'GET'
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Gagal memuat artikel publik.');
+  }
+
+  return data;
+}
+
 // Ambil seluruh artikel internal portal dengan filter status, kategori, dan pencarian judul
 export async function fetchAdminArticles({ status = 'all', category = '', search = '' } = {}) {
   const params = new URLSearchParams();

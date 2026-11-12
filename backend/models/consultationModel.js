@@ -4,16 +4,17 @@ const { pool } = require('../src/config/db');
 
 class ConsultationModel {
   // Tambah permohonan konsultasi baru (digunakan oleh form publik)
-  static async create({ client_name, client_email, client_phone = null, service_id = null, subject, message }) {
+  static async create({ client_name, client_email, client_phone = null, service_id = null, requested_date = null, subject, message }) {
     const query = `
-      INSERT INTO consultations (client_name, client_email, client_phone, service_id, subject, message, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'unread')
+      INSERT INTO consultations (client_name, client_email, client_phone, service_id, requested_date, subject, message, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'unread')
     `;
     const params = [
       client_name,
       client_email,
       client_phone || null,
       service_id ? parseInt(service_id, 10) : null,
+      requested_date || null,
       subject,
       message
     ];
@@ -31,6 +32,7 @@ class ConsultationModel {
         c.client_email,
         c.client_phone,
         c.service_id,
+        DATE_FORMAT(c.requested_date, '%Y-%m-%d') AS requested_date,
         c.subject,
         c.message,
         c.status,
@@ -71,6 +73,7 @@ class ConsultationModel {
         c.client_email,
         c.client_phone,
         c.service_id,
+        DATE_FORMAT(c.requested_date, '%Y-%m-%d') AS requested_date,
         c.subject,
         c.message,
         c.status,
@@ -85,7 +88,7 @@ class ConsultationModel {
     return rows.length > 0 ? rows[0] : null;
   }
 
-  // Perbarui status konsultasi (unread, read, replied, archived)
+  // Perbarui status konsultasi (unread, read, replied, archived, converted)
   static async updateStatus(id, status) {
     const query = `UPDATE consultations SET status = ? WHERE id = ?`;
     const [result] = await pool.execute(query, [status, id]);
@@ -100,7 +103,8 @@ class ConsultationModel {
         SUM(CASE WHEN status = 'unread' THEN 1 ELSE 0 END) AS unread,
         SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END) AS \`read\`,
         SUM(CASE WHEN status = 'replied' THEN 1 ELSE 0 END) AS replied,
-        SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) AS archived
+        SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) AS archived,
+        SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END) AS converted
       FROM consultations
     `;
     const [rows] = await pool.execute(query);
@@ -110,7 +114,8 @@ class ConsultationModel {
       unread: Number(row.unread || 0),
       read: Number(row.read || 0),
       replied: Number(row.replied || 0),
-      archived: Number(row.archived || 0)
+      archived: Number(row.archived || 0),
+      converted: Number(row.converted || 0)
     };
   }
 }

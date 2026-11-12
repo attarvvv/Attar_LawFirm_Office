@@ -27,6 +27,20 @@ export function getPhotoUrl(photoPath) {
   return `${SERVER_BASE_URL}${cleanPath}`;
 }
 
+// Ambil daftar pengacara publik untuk tampilan website dan landing page (hanya yang aktif)
+export async function fetchPublicLawyers() {
+  const response = await fetch(`${API_BASE_URL}/lawyers`, {
+    method: 'GET'
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Gagal memuat profil pengacara publik.');
+  }
+
+  return data;
+}
+
 // Ambil seluruh daftar pengacara internal dengan filter pencarian dan status
 export async function fetchLawyers({ search = '', status = 'all' } = {}) {
   const params = new URLSearchParams();

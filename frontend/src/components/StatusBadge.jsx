@@ -47,6 +47,11 @@ const statusConfig = {
     textClass: 'text-gray-500',
     dotClass: 'bg-gray-400'
   },
+  converted: {
+    label: 'Dikonversi',
+    textClass: 'text-purple-700',
+    dotClass: 'bg-purple-500'
+  },
 
   // Status Pengacara (Lawyers)
   active: {

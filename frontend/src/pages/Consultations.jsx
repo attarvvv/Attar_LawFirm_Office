@@ -1,13 +1,16 @@
 // Halaman Konsultasi Masuk (Consultations Inbox)
 // Menampilkan daftar pesan konsultasi dari klien publik dengan filter status, pencarian, dan modal detail
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatusBadge from '../components/StatusBadge';
 import {
   fetchConsultations,
   fetchConsultationDetail,
   updateConsultationStatus,
+  convertToAppointment,
   seedSampleConsultations
 } from '../api/consultations';
+import { fetchPublicLawyers } from '../api/lawyers';
 import {
   FaInbox,
   FaSearch,
@@ -18,12 +21,15 @@ import {
   FaBalanceScale,
   FaClock,
   FaCheckDouble,
-  FaEye
+  FaEye,
+  FaCalendarCheck,
+  FaCheckCircle
 } from 'react-icons/fa';
 
 export default function Consultations() {
+  const navigate = useNavigate();
   const [consultations, setConsultations] = useState([]);
-  const [stats, setStats] = useState({ total: 0, unread: 0, read: 0, replied: 0, archived: 0 });
+  const [stats, setStats] = useState({ total: 0, unread: 0, read: 0, replied: 0, archived: 0, converted: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,6 +42,15 @@ export default function Consultations() {
   const [activeModalItem, setActiveModalItem] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // State konversi konsultasi ke janji temu
+  const [lawyers, setLawyers] = useState([]);
+  const [convertLawyerId, setConvertLawyerId] = useState('');
+  const [convertAppointmentDate, setConvertAppointmentDate] = useState('');
+  const [convertAppointmentTime, setConvertAppointmentTime] = useState('10:00');
+  const [convertSubmitting, setConvertSubmitting] = useState(false);
+  const [convertError, setConvertError] = useState(null);
+  const [successModalData, setSuccessModalData] = useState(null);
 
   // Ambil daftar konsultasi dari backend
   const loadConsultations = async (status = statusFilter, search = appliedSearch) => {
@@ -58,6 +73,21 @@ export default function Consultations() {
     loadConsultations(statusFilter, appliedSearch);
   }, [statusFilter, appliedSearch]);
 
+  // Muat daftar pengacara untuk dropdown konversi janji temu
+  useEffect(() => {
+    const loadLawyers = async () => {
+      try {
+        const res = await fetchPublicLawyers();
+        if (res.success) {
+          setLawyers(res.data || []);
+        }
+      } catch (err) {
+        console.warn('Gagal memuat daftar pengacara:', err.message);
+      }
+    };
+    loadLawyers();
+  }, []);
+
   // Eksekusi pencarian saat form disubmit
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -74,12 +104,19 @@ export default function Consultations() {
   const handleOpenDetail = async (item) => {
     setActiveModalItem(item);
     setModalLoading(true);
+    setConvertLawyerId('');
+    setConvertAppointmentDate(item.requested_date || new Date().toISOString().split('T')[0]);
+    setConvertAppointmentTime('10:00');
+    setConvertError(null);
 
     try {
       // Backend akan otomatis memperbarui status unread menjadi read pada endpoint detail
       const res = await fetchConsultationDetail(item.id);
       if (res.success && res.data) {
         setActiveModalItem(res.data);
+        if (res.data.requested_date) {
+          setConvertAppointmentDate(res.data.requested_date);
+        }
         // Perbarui item di daftar lokal agar tampilan status langsung sinkron
         setConsultations((prev) =>
           prev.map((c) => (c.id === item.id ? { ...c, status: res.data.status } : c))
@@ -97,6 +134,44 @@ export default function Consultations() {
       console.error('Gagal mengambil detail konsultasi:', err);
     } finally {
       setModalLoading(false);
+    }
+  };
+
+  // Konversi permohonan konsultasi menjadi janji temu resmi
+  const handleConvertToAppointment = async (e) => {
+    e.preventDefault();
+    if (!activeModalItem) return;
+
+    if (!convertLawyerId || !convertAppointmentDate || !convertAppointmentTime) {
+      setConvertError('Pengacara yang menangani, tanggal pertemuan, dan jam pertemuan wajib diisi.');
+      return;
+    }
+
+    setConvertSubmitting(true);
+    setConvertError(null);
+    try {
+      const res = await convertToAppointment(activeModalItem.id, {
+        lawyer_id: convertLawyerId,
+        appointment_date: convertAppointmentDate,
+        appointment_time: convertAppointmentTime
+      });
+
+      if (res.success) {
+        const appointmentData = res.data;
+        // Tutup modal detail konsultasi
+        setActiveModalItem(null);
+        // Tampilkan modal dialog sukses konversi
+        setSuccessModalData({
+          booking_code: appointmentData.booking_code,
+          appointment_id: appointmentData.appointment_id
+        });
+        // Muat ulang daftar konsultasi agar status terbarui
+        loadConsultations(statusFilter, appliedSearch);
+      }
+    } catch (err) {
+      setConvertError(err.message || 'Gagal membuat janji temu dari konsultasi ini.');
+    } finally {
+      setConvertSubmitting(false);
     }
   };
 
@@ -159,6 +234,7 @@ export default function Consultations() {
     { key: 'unread', label: 'Belum Dibaca', count: stats.unread },
     { key: 'read', label: 'Dibaca', count: stats.read },
     { key: 'replied', label: 'Dibalas', count: stats.replied },
+    { key: 'converted', label: 'Dikonversi', count: stats.converted || 0 },
     { key: 'archived', label: 'Diarsipkan', count: stats.archived }
   ];
 
@@ -518,6 +594,93 @@ export default function Consultations() {
                   {modalLoading ? 'Memuat isi pesan...' : activeModalItem.message}
                 </div>
               </div>
+
+              {/* Seksi Konversi ke Janji Temu */}
+              {activeModalItem.status !== 'converted' && activeModalItem.status !== 'archived' ? (
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/15 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
+                      <FaCalendarCheck className="text-accent w-4 h-4" />
+                      <span>Konversi Menjadi Janji Temu Resmi</span>
+                    </div>
+                    {activeModalItem.requested_date && (
+                      <span className="text-[11px] text-dark-muted font-medium bg-white px-2.5 py-0.5 rounded-md border border-gray-200">
+                        Permintaan Klien: {activeModalItem.requested_date}
+                      </span>
+                    )}
+                  </div>
+
+                  {convertError && (
+                    <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs">
+                      {convertError}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Pilihan Pengacara */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-dark mb-1">
+                        Pengacara yang Sesuai <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={convertLawyerId}
+                        onChange={(e) => setConvertLawyerId(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-primary bg-white text-dark"
+                      >
+                        <option value="">-- Pilih Pengacara --</option>
+                        {lawyers.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.full_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Tanggal Janji Temu */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-dark mb-1">
+                        Tanggal Pertemuan <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={convertAppointmentDate}
+                        onChange={(e) => setConvertAppointmentDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-primary bg-white text-dark"
+                      />
+                    </div>
+
+                    {/* Jam Pertemuan */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-dark mb-1">
+                        Jam Pertemuan <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="time"
+                        value={convertAppointmentTime}
+                        onChange={(e) => setConvertAppointmentTime(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-primary bg-white text-dark"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-1 flex justify-end">
+                    <button
+                      type="button"
+                      disabled={!convertLawyerId || !convertAppointmentDate || !convertAppointmentTime || convertSubmitting}
+                      onClick={handleConvertToAppointment}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FaCalendarCheck className="text-accent" />
+                      <span>{convertSubmitting ? 'Memproses...' : 'Buat Janji Temu'}</span>
+                    </button>
+                  </div>
+                </div>
+              ) : activeModalItem.status === 'converted' ? (
+                <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs flex items-center gap-2">
+                  <FaCheckCircle className="text-purple-600 w-4 h-4 shrink-0" />
+                  <span>Konsultasi ini telah berhasil dikonversi menjadi Janji Temu resmi.</span>
+                </div>
+              ) : null}
             </div>
 
             {/* Footer Modal: Tombol Aksi */}
@@ -561,6 +724,42 @@ export default function Consultations() {
                   Tutup
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Dialog Sukses Konversi Janji Temu */}
+      {successModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark/70 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl shadow-inner">
+              <FaCheckCircle />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-primary">Janji Temu Telah Dibuat</h3>
+              <p className="text-xs text-dark-muted mt-1">
+                Data konsultasi berhasil dikonversi dengan kode booking resmi:
+              </p>
+              <div className="mt-2 inline-block px-3 py-1 bg-cream rounded-md border border-accent/20">
+                <span className="font-mono font-bold text-sm text-accent-dark">
+                  {successModalData.booking_code}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={() => navigate('/admin/appointments')}
+                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-light text-white text-xs font-semibold tracking-wide transition-colors cursor-pointer"
+              >
+                Cek Janji Temu
+              </button>
+              <button
+                onClick={() => setSuccessModalData(null)}
+                className="w-full py-2 px-4 rounded-xl text-dark-muted hover:bg-gray-100 text-xs font-medium transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
             </div>
           </div>
         </div>

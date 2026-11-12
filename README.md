@@ -47,6 +47,11 @@ Lihat bagian [Roadmap](#roadmap-selanjutnya) di bawah.
 | Lihat & kelola status Konsultasi | ✅ | ✅ | ✅ |
 | Lihat Daftar Pengacara | ✅ | ✅ | ✅ |
 | Tambah / Edit / Hapus Pengacara | ✅ | ❌ | ❌ |
+| Lihat Bidang Keahlian | ✅ | ✅ | ✅ |
+| Tambah / Edit / Hapus Bidang Keahlian | ✅ | ❌ | ❌ |
+| Buat Artikel & Berita | ✅ | ✅ | ✅ |
+| Edit / Hapus Artikel Sendiri | ✅ | ✅ | ✅ |
+| Kelola Kategori Artikel | ✅ | ❌ | ❌ |
 | Kelola Pengguna (akun internal) | ✅ | ❌ | ❌ |
 
 > Registrasi publik lewat `/register` secara default hanya membuat akun dengan role `staff`. Akun `admin` atau `lawyer` dibuat/diatur oleh admin melalui menu **Kelola Pengguna**.
@@ -167,10 +172,10 @@ Silakan baca file panduan lengkap di:
 
 ## Roadmap Selanjutnya
 
-- [ ] Halaman Utama publik (profil kantor, visi-misi, bidang keahlian)
+- [x] Halaman Utama publik (profil kantor, visi-misi, bidang keahlian, pengacara, kontak)
 - [ ] Halaman Layanan & Konsultasi publik beserta alur penanganan perkara
 - [ ] Form Booking Konsultasi publik untuk klien (tanpa akun)
-- [ ] Blog / Artikel Hukum (manajemen kategori & publikasi)
+- [x] Blog / Artikel Hukum (manajemen kategori & publikasi artikel)
 
 ---
 
