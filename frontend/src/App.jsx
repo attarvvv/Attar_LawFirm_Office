@@ -3,22 +3,25 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
 import Consultations from './pages/Consultations';
 import Lawyers from './pages/Lawyers';
 import Articles from './pages/Articles';
 import Services from './pages/Services';
+import Users from './pages/Users';
 import LandingPage from './pages/LandingPage';
+import ConsultationPage from './pages/ConsultationPage';
 
 export default function App() {
   return (
     <Routes>
       {/* Rute Publik */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/konsultasi" element={<ConsultationPage />} />
+      <Route path="/konsultasi-online" element={<Navigate to="/konsultasi" replace />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
 
       {/* Rute Terproteksi Internal Portal */}
       <Route
@@ -81,13 +84,25 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      {/* Alias untuk Janji Temu, Konsultasi, Pengacara, Bidang Keahlian, dan Artikel */}
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <Users />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Alias untuk Janji Temu, Konsultasi, Pengacara, Bidang Keahlian, Artikel, dan Pengguna */}
       <Route path="/admin/janji-temu" element={<Navigate to="/admin/appointments" replace />} />
       <Route path="/admin/konsultasi" element={<Navigate to="/admin/consultations" replace />} />
       <Route path="/admin/pengacara" element={<Navigate to="/admin/lawyers" replace />} />
       <Route path="/admin/bidang-keahlian" element={<Navigate to="/admin/services" replace />} />
       <Route path="/admin/layanan" element={<Navigate to="/admin/services" replace />} />
       <Route path="/admin/artikel" element={<Navigate to="/admin/articles" replace />} />
+      <Route path="/admin/pengguna" element={<Navigate to="/admin/users" replace />} />
+      <Route path="/admin/manage-users" element={<Navigate to="/admin/users" replace />} />
 
       {/* Pengalihan Default */}
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

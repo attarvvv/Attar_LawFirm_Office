@@ -1,6 +1,7 @@
 // Komponen Kontak & Permintaan Konsultasi (ContactSection)
-// Catatan: Tombol ini mengarahkan ke kontak langsung; dapat dialihkan ke formulir booking janji temu online saat fitur janji temu publik selesai dibangun.
+// Menyediakan informasi sekretariat dan tombol pengajuan konsultasi online langsung ke halaman konsultasi
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   FaMapMarkerAlt,
   FaPhoneAlt,
@@ -16,9 +17,6 @@ export default function ContactSection({ onOpenConsultation }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Bagian */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-block px-3 py-1 rounded-full bg-accent/20 text-accent-dark text-xs font-semibold tracking-wider uppercase mb-3">
-            Hubungi Kantor Kami
-          </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-primary tracking-tight">
             Konsultasikan Kebutuhan Hukum Anda
           </h2>
@@ -124,16 +122,13 @@ export default function ContactSection({ onOpenConsultation }) {
               </p>
 
               <div className="space-y-3">
-                {onOpenConsultation && (
-                  <button
-                    type="button"
-                    onClick={onOpenConsultation}
-                    className="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-xl bg-accent hover:bg-accent-dark text-primary font-bold text-xs tracking-wider uppercase shadow-lg transition-all transform hover:-translate-y-0.5 cursor-pointer"
-                  >
-                    <FaPhoneAlt className="w-3.5 h-3.5" />
-                    <span>Ajukan Konsultasi Sekarang</span>
-                  </button>
-                )}
+                <Link
+                  to="/konsultasi"
+                  className="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-xl bg-accent hover:bg-accent-dark text-primary font-bold text-xs tracking-wider uppercase shadow-lg transition-all transform hover:-translate-y-0.5 cursor-pointer text-center"
+                >
+                  <FaPhoneAlt className="w-3.5 h-3.5" />
+                  <span>Ajukan Konsultasi Sekarang</span>
+                </Link>
 
                 <a
                   href="tel:+622155508899"

@@ -61,13 +61,12 @@ export default function Footer({ onOpenConsultation }) {
                 </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={onOpenConsultation}
-                  className="hover:text-accent transition-colors text-left cursor-pointer"
+                <Link
+                  to="/konsultasi"
+                  className="hover:text-accent transition-colors block"
                 >
                   Konsultasi Online
-                </button>
+                </Link>
               </li>
             </ul>
           </div>

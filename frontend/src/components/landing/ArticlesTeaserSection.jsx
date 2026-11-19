@@ -47,9 +47,6 @@ export default function ArticlesTeaserSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Bagian */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-block px-3 py-1 rounded-full bg-accent/20 text-accent-dark text-xs font-semibold tracking-wider uppercase mb-3">
-            Edukasi & Wawasan Hukum
-          </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-primary tracking-tight">
             Artikel & Kabar Hukum Terkini
           </h2>

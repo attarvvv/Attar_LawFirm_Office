@@ -49,9 +49,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Endpoint cek kesehatan server (health check)
 app.get('/api/health', (req, res) => {
+  const WhatsappService = require('../services/whatsappService');
   res.status(200).json({
     success: true,
     message: 'API Attar Lawfirm Office aktif.',
+    whatsapp: WhatsappService.getStatus(),
     timestamp: new Date().toISOString()
   });
 });

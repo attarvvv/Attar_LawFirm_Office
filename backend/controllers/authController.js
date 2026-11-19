@@ -24,83 +24,12 @@ function setAuthCookie(res, token) {
   res.cookie('token', token, cookieOptions);
 }
 
-// Controller: Registrasi pengguna staf baru
-// - Registrasi publik hanya diizinkan untuk peran 'staff'.
-// - Kolom kata sandi di-hash menggunakan bcrypt ke kolom `pass`.
-// - Kolom `pass` tidak pernah dikembalikan pada response JSON.
+// Controller: Registrasi pengguna staf baru (Dinonaktifkan demi keamanan portal internal)
 async function register(req, res, next) {
   try {
-    // Terima nama dan password baik dalam format bahasa Indonesia maupun Inggris
-    const nama = req.body.nama || req.body.name;
-    const email = req.body.email;
-    const password = req.body.pass || req.body.password;
-    const requestedRole = req.body.role;
-
-    // 1. Validasi field wajib
-    if (!nama || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Nama, email, dan kata sandi wajib diisi.'
-      });
-    }
-
-    // 2. Validasi format email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Format email tidak valid.'
-      });
-    }
-
-    // 3. Validasi panjang kata sandi
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Kata sandi minimal harus 6 karakter.'
-      });
-    }
-
-    // 4. Pengamanan eskalasi peran: Cegah pembuatan akun admin/lawyer lewat form publik
-    if (requestedRole && requestedRole !== 'staff') {
-      return res.status(400).json({
-        success: false,
-        message: 'Pendaftaran publik hanya diizinkan untuk peran "staff". Peran admin atau lawyer harus ditugaskan secara internal oleh Administrator.'
-      });
-    }
-
-    const assignedRole = 'staff';
-
-    // 5. Cek apakah email sudah terdaftar
-    const existingUser = await UserModel.findByEmail(email);
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'Email sudah terdaftar. Silakan gunakan email lain atau login.'
-      });
-    }
-
-    // 6. Hash kata sandi dengan bcrypt
-    const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // 7. Simpan pengguna baru ke database
-    const newUser = await UserModel.create({
-      nama,
-      email,
-      hashedPassword,
-      role: assignedRole
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: 'Registrasi berhasil. Akun Anda telah dibuat sebagai staff.',
-      user: {
-        id: newUser.id,
-        nama: newUser.nama,
-        email: newUser.email,
-        role: newUser.role
-      }
+    return res.status(403).json({
+      success: false,
+      message: 'Registrasi publik telah dinonaktifkan. Akun staf dan pengacara hanya dapat dibuat oleh Administrator melalui menu Kelola Pengguna.'
     });
   } catch (error) {
     next(error);

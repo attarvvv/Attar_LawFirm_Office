@@ -13,8 +13,24 @@ const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 // GET /api/admin/dashboard-stub - Ringkasan dashboard shell (Dapat diakses admin, lawyer, staff)
 router.get('/dashboard-stub', verifyToken, adminController.getDashboardStub);
 
-// GET /api/admin/manage-users-stub - Endpoint khusus peran admin (Role: admin saja)
+// GET /api/admin/manage-users-stub - Endpoint kompatibilitas backward (Role: admin saja)
 router.get('/manage-users-stub', verifyToken, requireRole('admin'), adminController.getManageUsersStub);
+
+// Rute manajemen pengguna internal (Users CRUD - Khusus Administrator)
+// GET /api/admin/users - Daftar seluruh pengguna internal
+router.get('/users', verifyToken, requireRole('admin'), adminController.getAllUsers);
+
+// GET /api/admin/users/:id - Detail satu pengguna
+router.get('/users/:id', verifyToken, requireRole('admin'), adminController.getUserById);
+
+// POST /api/admin/users - Tambah akun pengguna baru (admin, lawyer, staff)
+router.post('/users', verifyToken, requireRole('admin'), adminController.createUser);
+
+// PUT /api/admin/users/:id - Perbarui data akun pengguna
+router.put('/users/:id', verifyToken, requireRole('admin'), adminController.updateUser);
+
+// DELETE /api/admin/users/:id - Hapus akun pengguna (dengan proteksi keamanan)
+router.delete('/users/:id', verifyToken, requireRole('admin'), adminController.deleteUser);
 
 // GET /api/admin/consultations - Daftar konsultasi masuk beserta rekap statistik status
 router.get('/consultations', verifyToken, consultationController.getAllConsultations);
@@ -113,5 +129,12 @@ router.put('/services/:id', verifyToken, requireRole('admin'), ServiceController
 
 // DELETE /api/admin/services/:id - Hapus bidang keahlian (khusus administrator)
 router.delete('/services/:id', verifyToken, requireRole('admin'), ServiceController.destroy);
+
+// Rute manajemen sesi WhatsApp bot
+// GET /api/admin/whatsapp/status - Cek status koneksi bot WhatsApp dan QR code aktif
+router.get('/whatsapp/status', verifyToken, adminController.getWhatsappStatus);
+
+// POST /api/admin/whatsapp/reset - Reset sesi WhatsApp dan paksa pembuatan QR code baru
+router.post('/whatsapp/reset', verifyToken, requireRole('admin'), adminController.resetWhatsappSession);
 
 module.exports = router;

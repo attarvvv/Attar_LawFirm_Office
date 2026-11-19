@@ -137,11 +137,6 @@ export default function Dashboard() {
             </span>.
           </p>
         </div>
-
-        {/* Ornamen watermark timbangan keadilan */}
-        <div className="absolute right-4 -bottom-6 text-9xl text-white/5 pointer-events-none select-none font-serif">
-          ⚖️
-        </div>
       </div>
 
       {/* Ringkasan Modul Kantor Hukum */}

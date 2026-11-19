@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaBalanceScale } from 'react-icons/fa';
 
 // Komponen logo brand kantor hukum (mendukung file gambar /logo.png dari folder public dan mode iconOnly)
 export default function BrandLogo({ size = 'normal', inverted = false, iconOnly = false }) {
@@ -18,7 +19,7 @@ export default function BrandLogo({ size = 'normal', inverted = false, iconOnly 
           } object-contain transition-all`}
         />
       ) : (
-        // Ikon cadangan timbangan keadilan jika file gambar belum dimasukkan
+        // Ikon vektor timbangan keadilan jika file gambar belum dimasukkan
         <div
           className={`flex items-center justify-center rounded-lg border ${
             inverted
@@ -27,7 +28,7 @@ export default function BrandLogo({ size = 'normal', inverted = false, iconOnly 
           } ${isLarge ? 'w-11 h-11 text-xl' : 'w-9 h-9 text-base'} shadow-sm flex-shrink-0`}
           aria-hidden="true"
         >
-          <span>⚖️</span>
+          <FaBalanceScale className={`${isLarge ? 'w-6 h-6' : 'w-4 h-4'} text-accent`} />
         </div>
       )}
 

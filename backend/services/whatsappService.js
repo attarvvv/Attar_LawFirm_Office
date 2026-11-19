@@ -1,4 +1,3 @@
-// Layanan Integrasi WhatsApp (WhatsappService) berbasis arsitektur OOP
 // Mengelola koneksi persistent Baileys, caching kredensial sesi ke disk, dan pengiriman notifikasi konfirmasi
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
@@ -11,6 +10,8 @@ class WhatsappService {
   static sock = null;
   static isConnected = false;
   static isInitializing = false;
+  // Menyimpan raw string QR code aktif untuk pemantauan
+  static qrCode = null;
   // Hitung percobaan reconnect agar tidak loop tanpa batas saat QR belum di-scan
   static reconnectAttempts = 0;
   static MAX_RECONNECT = 5;
@@ -35,6 +36,16 @@ class WhatsappService {
     return `${clean}@s.whatsapp.net`;
   }
 
+  // Mengambil status koneksi WhatsApp saat ini
+  static getStatus() {
+    return {
+      isConnected: this.isConnected,
+      hasQR: Boolean(this.qrCode),
+      qrCode: this.qrCode,
+      reconnectAttempts: this.reconnectAttempts
+    };
+  }
+
   // Inisialisasi koneksi persistent WhatsApp saat server Express pertama kali berjalan
   static async init() {
     if (this.isInitializing) return;
@@ -53,7 +64,7 @@ class WhatsappService {
         auth: state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false,
-        browser: Browsers.macOS('Desktop')
+        browser: Browsers.ubuntu('Chrome')
       });
 
       // Simpan pembaruan kredensial dan kunci autentikasi saat diperbarui
@@ -66,10 +77,11 @@ class WhatsappService {
         // Cetak QR code ke terminal — reset penghitung reconnect saat QR baru muncul
         if (qr) {
           this.reconnectAttempts = 0;
+          this.qrCode = qr;
           console.log('\n====================================================');
           console.log('[WhatsApp] Silakan scan QR code berikut untuk menghubungkan WhatsApp:');
           qrcode.generate(qr, { small: true });
-          console.log('Scan dengan HP → WhatsApp → ⋮ Menu → Perangkat Tertaut → Tautkan Perangkat');
+          console.log('Scan dengan HP -> WhatsApp -> Perangkat Tertaut -> Tautkan Perangkat');
           console.log('====================================================\n');
         }
 
@@ -78,6 +90,7 @@ class WhatsappService {
           this.isConnected = true;
           this.isInitializing = false;
           this.reconnectAttempts = 0;
+          this.qrCode = null;
           console.log('[WhatsApp] Bot WhatsApp Attar Lawfirm berhasil terhubung dan siap beroperasi.');
         }
 
@@ -87,23 +100,36 @@ class WhatsappService {
           this.isInitializing = false;
           const statusCode = lastDisconnect?.error?.output?.statusCode;
 
-          // Jika sesi di-logout dari HP — tidak perlu reconnect, hapus sesi lama
-          if (statusCode === DisconnectReason.loggedOut) {
-            console.log('[WhatsApp] Sesi dicabut dari HP. Hapus folder whatsapp-session/ lalu restart server untuk scan QR baru.');
+          // Jika sesi di-logout dari HP atau sesi rusak — bersihkan dan buat QR baru
+          if (statusCode === DisconnectReason.loggedOut || statusCode === DisconnectReason.badSession) {
+            console.log('[WhatsApp] Sesi dicabut dari HP atau kedaluwarsa. Menyiapkan sesi baru untuk QR code...');
             this.clearSession();
+            setTimeout(() => {
+              this.init();
+            }, 1500);
+            return;
+          }
+
+          // Jika restartRequired (515) — ini adalah bagian normal dari proses pairing setelah scan QR
+          if (statusCode === DisconnectReason.restartRequired) {
+            console.log('[WhatsApp] Pairing berhasil diverifikasi oleh WhatsApp. Menyambungkan kembali (restartRequired)...');
+            this.reconnectAttempts = 0;
+            setTimeout(() => {
+              this.init();
+            }, 500);
             return;
           }
 
           // Jika sudah mencapai batas reconnect — hentikan loop, tunggu restart manual
           if (this.reconnectAttempts >= this.MAX_RECONNECT) {
             console.log(`[WhatsApp] Gagal reconnect setelah ${this.MAX_RECONNECT}x percobaan. WhatsApp dinonaktifkan sementara.`);
-            console.log('[WhatsApp] Restart server backend untuk mencoba lagi.');
+            console.log('[WhatsApp] Restart server backend atau reset sesi untuk mencoba lagi.');
             return;
           }
 
           // Reconnect dengan jeda bertahap (backoff)
           this.reconnectAttempts += 1;
-          const delay = this.reconnectAttempts * 5000;
+          const delay = this.reconnectAttempts * 3000;
           console.log(`[WhatsApp] Koneksi terputus (${statusCode || 'Unknown'}). Reconnect ke-${this.reconnectAttempts} dalam ${delay / 1000}s...`);
           setTimeout(() => {
             this.init();
@@ -125,14 +151,38 @@ class WhatsappService {
         // Hapus semua file di dalam folder sesi (kecuali .gitkeep)
         fs.readdirSync(sessionDir).forEach((file) => {
           if (file !== '.gitkeep') {
-            fs.unlinkSync(path.join(sessionDir, file));
+            try {
+              fs.unlinkSync(path.join(sessionDir, file));
+            } catch (err) {
+              // Abaikan file yang sedang diakses
+            }
           }
         });
-        console.log('[WhatsApp] File sesi lama berhasil dihapus.');
+        console.log('[WhatsApp] File sesi lama berhasil dibersihkan.');
       }
     } catch (err) {
       console.error('[WhatsApp] Gagal menghapus file sesi:', err.message);
     }
+  }
+
+  // Reset sesi secara manual dan pemicu pembuatan QR code baru
+  static async resetSession() {
+    console.log('[WhatsApp] Mereset sesi WhatsApp dan menyiapkan QR code baru...');
+    this.isConnected = false;
+    this.isInitializing = false;
+    this.qrCode = null;
+    this.reconnectAttempts = 0;
+    if (this.sock) {
+      try {
+        this.sock.end(new Error('Reset sesi WhatsApp manual'));
+      } catch (e) {
+        // Abaikan penutupan socket
+      }
+      this.sock = null;
+    }
+    this.clearSession();
+    await this.init();
+    return this.getStatus();
   }
 
   // Kirim pesan WhatsApp ke nomor telepon klien

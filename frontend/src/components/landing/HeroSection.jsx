@@ -1,22 +1,27 @@
-// Komponen Hero Section utama halaman publik
-// Menampilkan nama firma, tagline, tombol CTA, dan elemen visual dekoratif berbasis CSS murni
+// Komponen Hero Section utama halaman publik dengan latar belakang foto sinematik penuh dan kartu floating fitur
+// Menampilkan headline bertenaga, badge status, tombol aksi kapsul elegan, dan indikator kepercayaan
 import React from 'react';
-import { FaShieldAlt, FaBalanceScale, FaAward, FaUserCheck, FaChevronRight } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { FaShieldAlt, FaBalanceScale, FaAward, FaUserCheck, FaArrowRight } from 'react-icons/fa';
+import heroOfficeImg from '../../assets/hero-office.webp';
 
 export default function HeroSection({ onOpenConsultation }) {
   return (
     <section
       id="beranda"
-      className="relative min-h-[92vh] flex items-center justify-center bg-primary text-white pt-28 pb-20 overflow-hidden"
+      className="relative min-h-screen flex flex-col justify-between bg-primary text-white pt-32 sm:pt-36 pb-12 overflow-hidden"
     >
-      {/* Elemen Dekoratif CSS Murni: Gradien Ambient & Pola Geometris */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent blur-3xl" />
-        <div className="absolute top-1/2 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent-light blur-3xl" />
-        <div className="absolute -bottom-20 left-1/3 w-80 h-80 rounded-full bg-primary-light blur-2xl" />
-      </div>
+      {/* Foto Latar Belakang Sinematik Penuh (Full-Cover Law Office) */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transform scale-102"
+        style={{ backgroundImage: `url(${heroOfficeImg})` }}
+      />
 
-      {/* Grid Pattern CSS Halus */}
+      {/* Lapisan Gradien Gelap: Pekat di Sisi Kiri untuk Keterbacaan Teks Maksimal */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/98 via-primary/90 to-primary/50" />
+      <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-primary/60" />
+
+      {/* Pola Garis Grid Halus CSS */}
       <div
         className="absolute inset-0 pointer-events-none opacity-5"
         style={{
@@ -26,86 +31,126 @@ export default function HeroSection({ onOpenConsultation }) {
         }}
       />
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-        {/* Label Badge Kantor Hukum */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 border border-accent/40 text-accent-light text-xs font-semibold tracking-wider uppercase mb-6 backdrop-blur-xs">
-          <FaBalanceScale className="w-3.5 h-3.5 text-accent" />
-          <span>Kantor Advokat & Konsultan Hukum Terpercaya</span>
+      {/* Konten Utama Hero (Kiri Sinematik & Kartu Floating Kanan Bawah) */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 w-full my-auto py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
+          {/* Kolom Kiri: Headline, Tagline, dan Tombol Aksi Kapsul */}
+          <div className="lg:col-span-8 text-left">
+            {/* Judul Utama Headline Bold & Masif */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] text-white mb-4">
+              Integritas & Strategi Hukum, <br className="hidden sm:inline" />
+              Menegakkan Keadilan.
+            </h1>
+
+            {/* Sub-headline Aksen Emas */}
+            <p className="text-sm sm:text-base font-semibold text-accent mb-4 tracking-wide">
+              Mitra Hukum Tepercaya dalam Litigasi & Kepatuhan Korporasi.
+            </p>
+
+            {/* Paragraf Pengantar Singkat */}
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed mb-8 max-w-xl font-normal">
+              Attar Lawfirm Office mendedikasikan pemahaman yuridis mendalam dan integritas tanpa kompromi untuk melindungi hak serta kepentingan bisnis Anda di seluruh Indonesia.
+            </p>
+
+            {/* Kelompok Tombol CTA Bergaya Kapsul Modern Sesuai Referensi Desain */}
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Tombol Utama Kapsul Putih — Direct ke Halaman Konsultasi Online */}
+              <Link
+                to="/konsultasi"
+                className="group inline-flex items-center gap-3 pl-6 pr-2 py-2 rounded-full bg-white hover:bg-cream text-primary font-bold text-xs uppercase tracking-wider shadow-2xl transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                <span>Konsultasi Sekarang</span>
+                <div className="w-8 h-8 rounded-full bg-accent group-hover:bg-accent-dark flex items-center justify-center text-primary transition-colors">
+                  <FaArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                </div>
+              </Link>
+
+              {/* Tombol Sekunder Kapsul Gelap Berbingkai Halus */}
+              <a
+                href="#layanan"
+                className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/30 font-semibold text-xs uppercase tracking-wider backdrop-blur-md transition-all duration-200 cursor-pointer"
+              >
+                <span>Jelajahi Bidang Keahlian</span>
+                <FaArrowRight className="w-3 h-3 text-accent group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
+          </div>
+
+          {/* Kolom Kanan Bawah: Kartu Mini Fitur Mengambang (/01) Sesuai Referensi */}
+          <div className="lg:col-span-4 flex justify-start lg:justify-end">
+            <div className="hidden lg:flex items-center gap-4 bg-white/95 backdrop-blur-md text-primary p-4 rounded-2xl shadow-2xl border border-white/50 max-w-xs animate-in fade-in duration-500">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold text-primary">/01</span>
+                  <div className="w-8 h-0.5 bg-accent rounded-full" />
+                  <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold">
+                    <span>‹</span>
+                    <span>›</span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-dark leading-snug font-medium">
+                  Riset yuridis komprehensif & penanganan perkara berbasis bukti nyata.
+                </p>
+              </div>
+
+              {/* Pratinjau Foto Ruang Kerja Berbingkai Kecil */}
+              <div className="relative w-16 h-14 rounded-xl overflow-hidden shadow-inner shrink-0 bg-primary-dark">
+                <img
+                  src={heroOfficeImg}
+                  alt="Pratinjau Riset Hukum"
+                  className="w-full h-full object-cover opacity-85"
+                />
+                <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-white/95 text-primary flex items-center justify-center shadow-xs">
+                    <FaBalanceScale className="w-3 h-3 text-accent-dark" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Judul Utama Headline */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight sm:leading-tight lg:leading-tight text-white mb-6">
-          Integritas, Strategi Hukum Unggul, dan{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-accent-light to-accent">
-            Keadilan Tanpa Kompromi
-          </span>
-        </h1>
-
-        {/* Tagline & Deskripsi Pengantar */}
-        <p className="text-sm sm:text-base lg:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10 font-normal">
-          Attar Lawfirm Office mendedikasikan keahlian hukum komprehensif dalam menangani sengketa perdata, perkara pidana, kepatuhan korporasi, hingga transaksi bisnis strategis dengan standar etika profesional tertinggi.
-        </p>
-
-        {/* Tombol Aksi CTA */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          {/* Tombol Konsultasi Sekarang membuka modal formulir konsultasi online */}
-          <button
-            type="button"
-            onClick={onOpenConsultation}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl bg-accent hover:bg-accent-dark text-primary font-bold text-sm tracking-wide shadow-xl shadow-accent/20 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
-          >
-            <span>Konsultasi Sekarang</span>
-            <FaChevronRight className="w-3 h-3 text-primary" />
-          </button>
-
-          {/* Tombol Eksplorasi Bidang Keahlian */}
-          <a
-            href="#layanan"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-semibold text-sm transition-all duration-200 cursor-pointer"
-          >
-            <span>Jelajahi Bidang Keahlian</span>
-          </a>
-        </div>
-
-        {/* Indikator Rekam Jejak & Kepercayaan (Trust Stats) */}
-        <div className="pt-10 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
+      {/* Baris Bawah: Metrik Kepercayaan (Trust Stats) */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 w-full pt-6 border-t border-white/10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-white/10 border border-accent/40 flex items-center justify-center text-accent shrink-0 backdrop-blur-xs">
               <FaAward className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-lg font-bold text-white">15+ Tahun</p>
-              <p className="text-[11px] text-gray-400">Pengalaman Litigasi & Konsultasi</p>
+              <p className="text-base sm:text-lg font-bold text-white">15+ Tahun</p>
+              <p className="text-[11px] text-gray-300">Pengalaman Litigasi & Konsultasi</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-white/10 border border-accent/40 flex items-center justify-center text-accent shrink-0 backdrop-blur-xs">
               <FaShieldAlt className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-lg font-bold text-white">Ratusan Kasus</p>
-              <p className="text-[11px] text-gray-400">Perkara Bisnis & Perdata Tuntas</p>
+              <p className="text-base sm:text-lg font-bold text-white">Ratusan Kasus</p>
+              <p className="text-[11px] text-gray-300">Perkara Bisnis & Perdata Tuntas</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-white/10 border border-accent/40 flex items-center justify-center text-accent shrink-0 backdrop-blur-xs">
               <FaUserCheck className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-lg font-bold text-white">Berlisensi PERADI</p>
-              <p className="text-[11px] text-gray-400">Tim Advokat Resmi Bersumpah</p>
+              <p className="text-base sm:text-lg font-bold text-white">Berlisensi PERADI</p>
+              <p className="text-[11px] text-gray-300">Tim Advokat Resmi Bersumpah</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-white/10 border border-accent/40 flex items-center justify-center text-accent shrink-0 backdrop-blur-xs">
               <FaBalanceScale className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-lg font-bold text-white">100% Konfidensial</p>
-              <p className="text-[11px] text-gray-400">Jaminan Kerahasiaan Klien</p>
+              <p className="text-base sm:text-lg font-bold text-white">100% Konfidensial</p>
+              <p className="text-[11px] text-gray-300">Jaminan Kerahasiaan Klien</p>
             </div>
           </div>
         </div>

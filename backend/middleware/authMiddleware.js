@@ -43,7 +43,7 @@ function verifyToken(req, res, next) {
   }
 }
 
-// Middleware: Pembatasan akses berbasis peran pengguna (RBAC)
+// Middleware Pembatasan akses berbasis peran pengguna
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {

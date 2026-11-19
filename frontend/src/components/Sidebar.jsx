@@ -164,9 +164,18 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                   </div>
 
                   <div className="space-y-1">
-                    <a
-                      href="#manage-users"
-                      className="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-primary-light hover:text-white transition-colors border border-accent/30 bg-primary-light/50"
+                    <NavLink
+                      to="/admin/users"
+                      onClick={() => {
+                        if (window.innerWidth < 1024) onClose();
+                      }}
+                      className={({ isActive }) =>
+                        `flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'bg-accent text-primary font-semibold shadow-xs'
+                            : 'text-gray-200 hover:bg-primary-light hover:text-white border border-accent/30 bg-primary-light/50'
+                        }`
+                      }
                       title={t('navManageUsers')}
                     >
                       <div className="flex items-center gap-3">
@@ -176,18 +185,27 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                       <span className="text-[10px] font-bold bg-accent text-primary px-2 py-0.5 rounded-full">
                         Admin
                       </span>
-                    </a>
+                    </NavLink>
                   </div>
                 </>
               ) : (
                 <div className="flex justify-center py-2 border-t border-primary-light/60">
-                  <a
-                    href="#manage-users"
-                    className="p-3 rounded-lg text-accent hover:bg-primary-light hover:text-white transition-colors border border-accent/30 bg-primary-light/50 flex items-center justify-center"
+                  <NavLink
+                    to="/admin/users"
+                    onClick={() => {
+                      if (window.innerWidth < 1024) onClose();
+                    }}
+                    className={({ isActive }) =>
+                      `p-3 rounded-lg transition-colors border border-accent/30 flex items-center justify-center ${
+                        isActive
+                          ? 'bg-accent text-primary font-semibold'
+                          : 'text-accent hover:bg-primary-light hover:text-white bg-primary-light/50'
+                      }`
+                    }
                     title={`${t('navManageUsers')} (Khusus Administrator)`}
                   >
                     <FaUsersCog className="w-4 h-4" />
-                  </a>
+                  </NavLink>
                 </div>
               )}
             </div>

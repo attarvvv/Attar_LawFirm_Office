@@ -13,13 +13,11 @@ async function startServer() {
   WhatsappService.init();
 
   const server = app.listen(PORT, () => {
-    console.log(`====================================================`);
     console.log(`Server API Attar Lawfirm Office`);
     console.log(`Berjalan di: http://localhost:${PORT}`);
     console.log(`Endpoint Auth: http://localhost:${PORT}/api/auth`);
     console.log(`Endpoint Admin: http://localhost:${PORT}/api/admin`);
     console.log(`Origin Diizinkan: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-    console.log(`====================================================`);
   });
 
   // Penanganan graceful shutdown saat proses dihentikan

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Materi Presentasi Proyek - Attar Lawfirm Office</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+
+    @page {
+      size: A4;
+      margin: 16mm 14mm 16mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1C1C1C;
+      background-color: #FFFFFF;
+      line-height: 1.55;
+      font-size: 10pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      page-break-after: always;
+      position: relative;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Cover Page */
+    .cover-container {
+      height: 94vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 2px solid #14342B;
+      padding: 40px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #FAF8F3 0%, #FFFFFF 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-container::before {
+      content: "";
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(194,168,120,0.25) 0%, rgba(20,52,43,0.05) 70%, transparent 100%);
+      border-radius: 50%;
+    }
+
+    .cover-header {
+      border-bottom: 2px solid #C2A878;
+      padding-bottom: 20px;
+    }
+
+    .cover-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #14342B;
+      letter-spacing: 1px;
+    }
+
+    .cover-brand-gold {
+      color: #C2A878;
+    }
+
+    .cover-tagline {
+      font-size: 9pt;
+      color: #666;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .cover-body {
+      margin: 40px 0;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background-color: #14342B;
+      color: #C2A878;
+      font-size: 9pt;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 30px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .cover-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26pt;
+      color: #14342B;
+      line-height: 1.25;
+      margin-bottom: 15px;
+      font-weight: 800;
+    }
+
+    .cover-subtitle {
+      font-size: 11pt;
+      color: #4A5568;
+      max-width: 90%;
+      line-height: 1.6;
+    }
+
+    .cover-footer {
+      border-top: 1px solid #E2E8F0;
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9pt;
+      color: #718096;
+    }
+
+    .cover-footer-author {
+      font-weight: 600;
+      color: #14342B;
+    }
+
+    /* Content Styling */
+    h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16pt;
+      color: #14342B;
+      border-bottom: 2px solid #C2A878;
+      padding-bottom: 6px;
+      margin-top: 24px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 11pt;
+      color: #14342B;
+      margin-top: 14px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #2D3748;
+      text-align: justify;
+    }
+
+    /* Callouts & Cards */
+    .callout {
+      background-color: #FAF8F3;
+      border-left: 4px solid #C2A878;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      font-size: 9.5pt;
+    }
+
+    .callout-title {
+      font-weight: 600;
+      color: #14342B;
+      margin-bottom: 4px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      background-color: #FFFFFF;
+      page-break-inside: avoid;
+    }
+
+    .card-title {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #14342B;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card ul {
+      padding-left: 18px;
+      font-size: 9pt;
+      color: #4A5568;
+    }
+
+    .card li {
+      margin-bottom: 4px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px 0;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background-color: #14342B;
+      color: #FFFFFF;
+      text-align: left;
+      padding: 8px 10px;
+      font-weight: 600;
+      border: 1px solid #14342B;
+    }
+
+    td {
+      padding: 8px 10px;
+      border: 1px solid #E2E8F0;
+      color: #2D3748;
+    }
+
+    tr:nth-child(even) {
+      background-color: #FAF8F3;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 600;
+    }
+
+    .badge-primary {
+      background-color: #E6EFE9;
+      color: #14342B;
+      border: 1px solid #B8D5C2;
+    }
+
+    .badge-gold {
+      background-color: #F8F4EB;
+      color: #8C733E;
+      border: 1px solid #E0D3B8;
+    }
+
+    /* Workflow Diagram Box */
+    .flow-box {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+    }
+
+    .flow-step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      align-items: flex-start;
+    }
+
+    .flow-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-number {
+      background: #14342B;
+      color: #C2A878;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8.5pt;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      font-size: 9pt;
+      color: #334155;
+    }
+
+    .step-title {
+      font-weight: 600;
+      color: #0F172A;
+    }
+
+    /* Header/Footer on Content Pages */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      font-size: 8pt;
+      color: #A0AEC0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .page-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #E2E8F0;
+      padding-top: 6px;
+      font-size: 8pt;
+      color: #A0AEC0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PAGE 1: COVER ================= -->
+  <div class="page">
+    <div class="cover-container">
+      <div class="cover-header">
+        <div class="cover-brand">
+          <span>ATTAR LAWFIRM</span>
+          <span class="cover-brand-gold">OFFICE</span>
+        </div>
+        <div class="cover-tagline">Internal Practice &amp; Digital Advisory Portal</div>
+      </div>
+
+      <div class="cover-body">
+        <div class="cover-badge">Dokumen Presentasi Proyek &amp; Arsitektur Sistem</div>
+        <h1 class="cover-title">Platform Layanan Konsultasi &amp; Tata Kelola Praktik Hukum Digital</h1>
+        <p class="cover-subtitle">
+          Analisis mendalam alur sistem (flow), stack teknologi (framework &amp; library), keunggulan komparatif, evaluasi teknis, serta rencana pengembangan sistem.
+        </p>
+      </div>
+
+      <div class="cover-footer">
+        <div>
+          <div>Kantor Hukum: <strong>Attar &amp; Partners Law Office</strong></div>
+          <div>Basis Data: MySQL | Runtime: Node.js &amp; React SPA</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="cover-footer-author">Disusun untuk: Sesi Presentasi Resmi</div>
+          <div>Tanggal: 19 November 2026 | Versi Dokumen: 1.0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2: RINGKASAN & FLOW ================= -->
+  <div class="page">
+    <div class="page-header">
+      <span>Attar Lawfirm Office — Dokumen Presentasi Proyek</span>
+      <span>Bagian 1: Ringkasan &amp; Alur Sistem</span>
+    </div>
+
+    <h2>1. Ringkasan Eksekutif (Executive Summary)</h2>
+    <div class="callout">
+      <div class="callout-title">Konsep Platform Dua Sisi (Two-Sided Platform)</div>
+      <strong>Attar Lawfirm Office</strong> menggabungkan kehadiran digital profesional firma hukum untuk publik (*Public Showcase &amp; Online Consultation*) dengan portal internal berbasis peran (*Role-Based Access Control*) untuk pengelolaan jadwal janji temu perkara, penugasan advokat, notifikasi otomatis WhatsApp, tata kelola artikel, dan manajemen akun staf secara terpusat.
+    </div>
+
+    <h2>2. Alur Keseluruhan Sistem (End-to-End System Flow)</h2>
+    
+    <div class="grid-2">
+      <div class="flow-box">
+        <div style="font-weight: 700; color: #14342B; margin-bottom: 10px; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">
+          A. Alur Publik (Calon Klien)
+        </div>
+        <div class="flow-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Eksplorasi Landing Page</div>
+            Klien menelusuri layanan hukum, profil advokat, artikel edukasi, dan legal credentials kantor hukum.
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Formulir Konsultasi Online</div>
+            Klien mengakses menu <em>Konsultasi Sekarang</em> (<code>/konsultasi</code>) dan mengisi data identitas, nomor WhatsApp, serta pokok perkara.
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Pencatatan Tiket Konsultasi</div>
+            Data tersimpan ke tabel <code>consultations</code> dengan status awal <code>unread</code> dan timestamp otomatis.
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-box">
+        <div style="font-weight: 700; color: #14342B; margin-bottom: 10px; border-bottom: 1px solid #CBD5E1; padding-bottom: 4px;">
+          B. Alur Portal Internal (Staf &amp; Advokat)
+        </div>
+        <div class="flow-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Autentikasi Aman</div>
+            Staf &amp; advokat login melalui <code>/login</code> dengan JWT dan HttpOnly Cookie. Registrasi publik ditutup total.
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Verifikasi &amp; Konversi Jadwal</div>
+            Staf menelaah perkara, lalu mengonversi konsultasi masuk menjadi berkas janji temu resmi (<em>Appointments</em>).
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Notifikasi Otomatis WhatsApp</div>
+            Dengan satu klik, bot Baileys mengirimkan surat konfirmasi resmi ke nomor WhatsApp klien secara instan tanpa biaya API.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Struktur Arsitektur Sistem Terintegrasi</h3>
+    <table style="margin-top: 6px;">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Lapisan (Layer)</th>
+          <th style="width: 35%;">Teknologi Terpasang</th>
+          <th style="width: 40%;">Fungsi Utama</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Client Layer (Frontend)</strong></td>
+          <td>React 19, Vite, Tailwind CSS, React Router v7</td>
+          <td>Single Page Application (SPA), interaktif, responsif desktop &amp; mobile drawer.</td>
+        </tr>
+        <tr>
+          <td><strong>API Layer (Backend)</strong></td>
+          <td>Node.js, Express.js RESTful API, Multer</td>
+          <td>Routing modular, middleware autentikasi RBAC, upload multipart/form-data.</td>
+        </tr>
+        <tr>
+          <td><strong>Integration Layer</strong></td>
+          <td>@whiskeysockets/baileys, Sharp, Pino</td>
+          <td>Koneksi persistent WebSocket WhatsApp Web, kompresi gambar otomatis ke WebP.</td>
+        </tr>
+        <tr>
+          <td><strong>Data Layer (Database)</strong></td>
+          <td>MySQL (mysql2 pool dengan prepared statements)</td>
+          <td>Penyimpanan relasional: <code>users</code>, <code>consultations</code>, <code>appointments</code>, <code>lawyers</code>, <code>articles</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= PAGE 3: TECH STACK & KELEBIHAN ================= -->
+  <div class="page">
+    <div class="page-header">
+      <span>Attar Lawfirm Office — Dokumen Presentasi Proyek</span>
+      <span>Bagian 2: Stack Teknologi &amp; Keunggulan</span>
+    </div>
+
+    <h2>3. Daftar Library &amp; Framework yang Digunakan</h2>
+    <p>Setiap pustaka dan kerangka kerja dipilih berdasarkan pertimbangan performa, skalabilitas, dan stabilitas operasional:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Modul / Library</th>
+          <th>Kategori</th>
+          <th>Alasan Pemilihan &amp; Manfaat Teknis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>React 19 &amp; Vite 6</strong></td>
+          <td><span class="badge badge-primary">Frontend</span></td>
+          <td>Waktu rendering super cepat, hot-module-replacement instan saat pengembangan, dan bundle produksi teroptimasi.</td>
+        </tr>
+        <tr>
+          <td><strong>Tailwind CSS 3</strong></td>
+          <td><span class="badge badge-primary">Styling</span></td>
+          <td>Memungkinkan styling responsif presisi tanpa file CSS bertumpuk, palet khusus <em>Deep Forest (#14342B)</em> &amp; <em>Gold (#C2A878)</em>.</td>
+        </tr>
+        <tr>
+          <td><strong>Express.js 4</strong></td>
+          <td><span class="badge badge-primary">Backend</span></td>
+          <td>Kerangka kerja mikro yang matang, minim overhead, dengan ekosistem middleware luas dan performa I/O tinggi.</td>
+        </tr>
+        <tr>
+          <td><strong>MySQL2 (Pool Promises)</strong></td>
+          <td><span class="badge badge-primary">Database</span></td>
+          <td>Mendukung koneksi pooling asynchronous dan prepared statements untuk mencegah eksploitasi SQL Injection.</td>
+        </tr>
+        <tr>
+          <td><strong>JWT &amp; Bcrypt.js</strong></td>
+          <td><span class="badge badge-gold">Keamanan</span></td>
+          <td>Enkripsi kata sandi menggunakan salted hash bcrypt (10 rounds) dan otorisasi sesi stateless terproteksi.</td>
+        </tr>
+        <tr>
+          <td><strong>Baileys (@whiskeysockets)</strong></td>
+          <td><span class="badge badge-gold">WhatsApp</span></td>
+          <td>Mengoperasikan protokol WebSocket WhatsApp Web secara native tanpa browser berat (Chromium/Puppeteer), hemat memori &gt;80%.</td>
+        </tr>
+        <tr>
+          <td><strong>Sharp &amp; Multer</strong></td>
+          <td><span class="badge badge-primary">Media</span></td>
+          <td>Kompresi gambar beresolusi tinggi otomatis menjadi format WebP berbobot kecil (&lt;150 KB) untuk menghemat ruang penyimpanan.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4. Kelebihan &amp; Nilai Jual Utama (Unique Selling Points)</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">1. Integrasi WhatsApp Native (Zero-Cost)</div>
+        <ul>
+          <li>Tidak membutuhkan biaya bulanan atau tagihan per pesan dari penyedia third-party.</li>
+          <li>Dilengkapi deteksi error otomatis (463, 515 restartRequired) dan fitur reset sesi instan.</li>
+          <li>Pesan konfirmasi dikirim otomatis dengan template resmi berformat kop digital.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">2. Role-Based Access Control (RBAC) Ketat</div>
+        <ul>
+          <li><strong>Administrator</strong>: Kontrol penuh, kelola staf/pengacara, hak audit sistem.</li>
+          <li><strong>Pengacara</strong>: Akses jadwal janji temu dan penerbitan draf edukasi hukum.</li>
+          <li><strong>Staf</strong>: Penanganan berkas konsultasi masuk dan konfirmasi temu.</li>
+          <li>Registrasi publik ditutup total untuk menjamin integritas portal internal kantor hukum.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">3. Desain Eksklusif &amp; User Experience (UX)</div>
+        <ul>
+          <li>Identitas visual formal, bersih, dan berwibawa khas kantor advokat papan atas.</li>
+          <li>Sidebar adaptif (bisa diciutkan menjadi icon-rail) dengan persistensi status di LocalStorage.</li>
+          <li>Pencarian instan dan tab filter cepat di setiap modul manajemen.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">4. Keamanan &amp; Perlindungan Data Berlapis</div>
+        <ul>
+          <li>Proteksi akun: sistem mencegah penghapusan akun administrator terakhir.</li>
+          <li>Integritas relasi: akun tidak bisa dihapus jika masih terikat data perkara atau artikel aktif.</li>
+          <li>Penyimpanan kata sandi searah (*irreversible hash*) yang tidak dapat dibaca dari database.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 4: KEKURANGAN & SKRIP PRESENTASI ================= -->
+  <div class="page">
+    <div class="page-header">
+      <span>Attar Lawfirm Office — Dokumen Presentasi Proyek</span>
+      <span>Bagian 3: Evaluasi &amp; Panduan Presentasi</span>
+    </div>
+
+    <h2>5. Kekurangan / Keterbatasan &amp; Rencana Masa Depan</h2>
+    <p>Menjelaskan keterbatasan sistem secara jujur dan memberikan solusinya akan menunjukkan kematangan analisis proyek di depan penguji/klien:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 28%;">Keterbatasan Saat Ini</th>
+          <th style="width: 32%;">Dampak Operasional</th>
+          <th style="width: 40%;">Rencana Pengembangan (Roadmap)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Ketergantungan Ponsel Host WhatsApp</strong></td>
+          <td>Ponsel admin yang discan harus tetap memiliki koneksi internet aktif agar bot dapat bekerja.</td>
+          <td>Mengintegrasikan failover cadangan ke SMS Gateway atau Cloud WhatsApp API resmi untuk kebutuhan skala besar.</td>
+        </tr>
+        <tr>
+          <td><strong>Ketiadaan Client Dashboard</strong></td>
+          <td>Klien hanya menerima kabar via WhatsApp/Email tanpa dashboard pelacakan mandiri.</td>
+          <td>Menyediakan portal mandiri klien (<em>Client Case Tracking Portal</em>) dengan login kode tiket unik.</td>
+        </tr>
+        <tr>
+          <td><strong>Penyimpanan Bukti Fisik</strong></td>
+          <td>Formulir konsultasi baru menampung pokok perkara dalam bentuk teks deskripsi.</td>
+          <td>Menambahkan fitur upload dokumen perkara (PDF berkas gugatan, scan KTP, alat bukti) dengan enkripsi data terpusat.</td>
+        </tr>
+        <tr>
+          <td><strong>Pembaruan Status Realtime</strong></td>
+          <td>Perubahan data baru di dashboard memerlukan aksi pemuatan ulang (*refresh/polling*).</td>
+          <td>Mengintegrasikan WebSocket / Server-Sent Events (SSE) agar notifikasi permohonan baru langsung berbunyi secara realtime.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>6. Panduan Skrip Bicara Saat Presentasi (Cheatsheet)</h2>
+
+    <div class="flow-box">
+      <div class="flow-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <div class="step-title">Menit 00:00 - 01:30 | Pendahuluan &amp; Latar Belakang Masalah</div>
+          <em>"Banyak kantor hukum masih menangani janji temu dan permohonan klien secara manual lewat pesan chat pribadi. Hal ini rawan terlewat, sulit dipantau progresnya, dan kurang mencerminkan profesionalitas. Dari masalah tersebut, kami merancang Attar Lawfirm Office."</em>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <div class="step-title">Menit 01:30 - 03:00 | Demonstrasi Halaman Publik</div>
+          <em>"Calon klien disuguhkan profil firma yang berwibawa, profil para advokat, bidang keahlian, dan tombol Konsultasi Sekarang yang langsung mengarahkan ke formulir perkara yang cepat dan terstruktur."</em>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <div class="step-title">Menit 03:00 - 05:30 | Demonstrasi Portal Internal &amp; WhatsApp Bot</div>
+          <em>"Di portal internal, staf dapat melihat konsultasi masuk, mengonversi kasus menjadi janji temu, dan dengan sekali klik tombol WhatsApp, sistem langsung menyapa klien dengan pesan konfirmasi resmi secara otomatis."</em>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <div class="step-title">Menit 05:30 - 07:00 | Modul Kelola Pengguna &amp; Arsitektur</div>
+          <em>"Portal ini bersifat tertutup. Pendaftaran akun staf atau pengacara hanya dapat dilakukan oleh Administrator di halaman Kelola Pengguna demi keamanan data perkara."</em>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <div class="step-title">Menit 07:00 - 08:00 | Kesimpulan &amp; Sesi Tanya Jawab</div>
+          <em>"Platform ini menggabungkan kecepatan teknologi React, keandalan Node.js, dan efisiensi integrasi WhatsApp tanpa biaya tambahan. Terima kasih, kami buka sesi tanya jawab."</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

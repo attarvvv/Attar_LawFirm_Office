@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from '../components/BrandLogo';
 import { t } from '../i18n';
+import authBgImg from '../assets/auth-bg.webp';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 
 export default function Login() {
@@ -202,16 +203,10 @@ export default function Login() {
             </div>
           </form>
 
-          {/* Tautan Menuju Pendaftaran Akun Staf */}
+          {/* Informasi Pendaftaran Akun Internal */}
           <div className="mt-6 pt-6 border-t border-gray-200/80 text-center">
-            <p className="text-xs sm:text-sm text-dark-muted">
-              {t('noAccount')}{' '}
-              <Link
-                to="/register"
-                className="font-bold text-primary hover:text-accent-dark transition-colors underline underline-offset-4"
-              >
-                {t('registerHere')}
-              </Link>
+            <p className="text-xs text-dark-muted leading-relaxed">
+              Belum memiliki akun akses? Silakan hubungi <span className="font-semibold text-primary">Administrator</span> kantor hukum untuk pembuatan akun staf atau advokat.
             </p>
           </div>
         </div>
@@ -222,22 +217,23 @@ export default function Login() {
         </p>
       </div>
 
-      {/* SISI KANAN: Panel Visual Brand (Primary #14342B solid + Elemen Dekoratif CSS) */}
+      {/* SISI KANAN: Panel Visual Brand (Foto Group 15980 + Dekorasi Elegan) */}
       <div className="hidden lg:flex lg:w-[54%] xl:w-[58%] bg-primary relative overflow-hidden flex-col items-center justify-center p-12 text-white select-none">
+        {/* Gambar Latar Belakang Group 15980 */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${authBgImg})` }}
+        />
+
+        {/* Lapisan Tint Gradien Halus untuk Keselarasan Kontras */}
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/30 to-primary/60 pointer-events-none" />
+
         {/* Dekorasi Garis Geometris CSS Murni */}
         <div className="absolute inset-10 border border-accent/20 rounded-3xl pointer-events-none" />
         <div className="absolute inset-16 border border-accent/10 rounded-2xl pointer-events-none" />
 
-        {/* Gradasi Radial Lembut Emas */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(194,168,120,0.12)_0%,transparent_70%)] pointer-events-none" />
-
         {/* Konten Identitas Kantor Hukum */}
         <div className="relative z-10 max-w-lg text-center space-y-6">
-          {/* Ikon Timbangan Skala Besar dengan Frame Elegan */}
-          <div className="w-24 h-24 mx-auto rounded-3xl bg-accent/15 border-2 border-accent/40 flex items-center justify-center text-5xl shadow-2xl backdrop-blur-xs">
-            ⚖️
-          </div>
-
           <div>
             <h1 className="text-3xl xl:text-4xl font-bold tracking-tight text-white leading-tight">
               Attar <span className="text-accent">Lawfirm</span> Office
